@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:e2e": "node tests/e2e/master-flow.e2e.js"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",
