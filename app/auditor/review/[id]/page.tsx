@@ -626,6 +626,7 @@ library TransferHelper {
 
       setFindings((prev) => [mappedNewFinding, ...prev]);
       setSelectedFindingId(mappedNewFinding.id);
+      setFindingView("detail");
       setSelectedFilePath(newFindingForm.file);
       setShowAddFindingModal(false);
       setNewFindingForm({
