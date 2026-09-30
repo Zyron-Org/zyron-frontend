@@ -848,7 +848,7 @@ library TransferHelper {
   const handleFinalizeReport = async () => {
     setIsCompilingReport(true);
     try {
-      const res = await apiClient.patch(`/audits/${audit.id}/advance-stage`, {
+      const res = await apiClient.patch(`/audits/${audit.id}/stage`, {
         stage: "COMPLETED",
       });
 
