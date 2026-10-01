@@ -47,7 +47,8 @@ interface Repository {
   id: string;
   fullName: string;
   defaultBranch: string;
-  isPrivate: boolean;
+  isPrivate?: boolean;
+  private?: boolean;
 }
 
 export default function AccountSettingsPage() {

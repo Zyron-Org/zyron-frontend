@@ -20,6 +20,7 @@ import {
   Globe,
   RefreshCw,
   AlertCircle,
+  AlertTriangle,
   Clock,
   Layers,
   Code2,
@@ -107,6 +108,20 @@ export default function NewAuditRequestPage() {
   const [selectedBranch, setSelectedBranch] = React.useState<string>("master");
   const [isLoadingBranches, setIsLoadingBranches] = React.useState<boolean>(false);
 
+  // Blockchain contract extension whitelist
+  const BLOCKCHAIN_EXTENSIONS = React.useMemo(
+    () => ['.sol', '.vy', '.cairo', '.move', '.rs', '.yul', '.tact', '.func', '.fc', '.huff', '.sw', '.circom', '.fe', '.zok'],
+    []
+  );
+  const isBlockchainContract = React.useCallback(
+    (fileName?: string) => {
+      if (!fileName) return false;
+      const lower = fileName.toLowerCase().trim();
+      return BLOCKCHAIN_EXTENSIONS.some((ext) => lower.endsWith(ext));
+    },
+    [BLOCKCHAIN_EXTENSIONS]
+  );
+
   // Step 2: Protocol Scope & Metadata State
   const defaultTestContract = OPEN_SOURCE_TEST_PROJECT.contractFiles[0];
   const [availableContracts, setAvailableContracts] = React.useState<string[]>([
@@ -115,6 +130,8 @@ export default function NewAuditRequestPage() {
     "contracts/UniswapV2ERC20.sol",
   ]);
   const [isLoadingContracts, setIsLoadingContracts] = React.useState<boolean>(false);
+  const [repoHasBlockchainFiles, setRepoHasBlockchainFiles] = React.useState<boolean | null>(true);
+  const [repoInspectionMessage, setRepoInspectionMessage] = React.useState<string | null>(null);
 
   const [protocolName, setProtocolName] = React.useState<string>("Uniswap V2 Core");
   const [contractFileName, setContractFileName] = React.useState<string>(defaultTestContract.fileName);
@@ -248,6 +265,7 @@ export default function NewAuditRequestPage() {
   // Fetch contract files for a repo and branch
   const fetchContractsForRepo = async (repoUrl: string, branch: string) => {
     setIsLoadingContracts(true);
+    setRepoInspectionMessage(null);
     try {
       const res = await apiClient.get("/integrations/github/contracts", {
         params: { repoUrl, branch },
@@ -257,22 +275,38 @@ export default function NewAuditRequestPage() {
         setGitCommit(data.commitSha);
       }
       const contractFiles: string[] = data?.contracts || [];
+      const hasBlockchain = data?.hasBlockchainFiles ?? (contractFiles.length > 0);
       setAvailableContracts(contractFiles);
+      setRepoHasBlockchainFiles(hasBlockchain);
 
-      // Auto-select and auto-fill primary contract!
-      if (contractFiles.length > 0) {
-        const primary =
-          contractFiles.find(
-            (c) =>
-              c.toLowerCase().includes("pair") ||
-              c.toLowerCase().includes("core") ||
-              c.toLowerCase().includes("vault")
-          ) || contractFiles[0];
+      if (!hasBlockchain) {
+        const errorMsg =
+          data?.message ||
+          "No blockchain smart contract files (.sol, .vy, .rs, .cairo, .move, .yul, .tact) detected in this repository branch.";
+        setRepoInspectionMessage(errorMsg);
+        setContractFileName("");
+        setSourceCode("");
+        toast.error("Non-blockchain repository detected! No smart contracts found.");
+      } else {
+        setRepoInspectionMessage(null);
+        // Auto-select and auto-fill primary contract!
+        if (contractFiles.length > 0) {
+          const primary =
+            contractFiles.find(
+              (c) =>
+                c.toLowerCase().includes("pair") ||
+                c.toLowerCase().includes("core") ||
+                c.toLowerCase().includes("vault")
+            ) || contractFiles[0];
 
-        await fetchFileContent(data.owner, data.repo, primary, branch);
+          await fetchFileContent(data.owner, data.repo, primary, branch);
+        }
       }
     } catch (err: any) {
       console.warn(`Could not inspect contract files:`, err.message);
+      setAvailableContracts([]);
+      setRepoHasBlockchainFiles(false);
+      setRepoInspectionMessage("Failed to inspect repository contracts. Ensure repository exists and is accessible.");
     } finally {
       setIsLoadingContracts(false);
     }
@@ -326,6 +360,8 @@ export default function NewAuditRequestPage() {
     setGitCommit(defaultTestContract.commit);
     setSourceCode(defaultTestContract.sourceCode);
     setAvailableContracts(["contracts/UniswapV2Pair.sol", "contracts/UniswapV2Factory.sol", "contracts/UniswapV2ERC20.sol"]);
+    setRepoHasBlockchainFiles(true);
+    setRepoInspectionMessage(null);
 
     toast.success("Loaded open-source test project: Uniswap V2 Core");
   };
@@ -371,6 +407,18 @@ export default function NewAuditRequestPage() {
       return;
     }
 
+    if (!isBlockchainContract(contractFileName)) {
+      toast.error(
+        `Invalid contract file "${contractFileName || "None"}". Please select or enter a valid smart contract file (.sol, .vy, .rs, .cairo, .move, .yul, .tact).`
+      );
+      return;
+    }
+
+    if (availableContracts.length === 0 || repoHasBlockchainFiles === false) {
+      toast.error("Cannot submit audit: The selected repository contains zero blockchain smart contract files.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const compiledBusinessGoals = JSON.stringify({
@@ -381,7 +429,7 @@ export default function NewAuditRequestPage() {
 
       const res = await apiClient.post("/audits", {
         protocolName,
-        contractFileName: contractFileName || "UniswapV2Pair.sol",
+        contractFileName,
         contractAddress: contractAddress || undefined,
         compilerVersion,
         network,
@@ -404,9 +452,6 @@ export default function NewAuditRequestPage() {
       const msg = err?.response?.data?.message || err?.message || "Failed to create audit request";
       const displayMsg = Array.isArray(msg) ? msg.join(", ") : msg;
       toast.error(displayMsg);
-      // Generate client-side fallback ticket on error
-      setSubmittedTicketId(`#ZYR-${Math.floor(1000 + Math.random() * 9000)}`);
-      setIsSubmitted(true);
     } finally {
       setIsSubmitting(false);
     }
@@ -893,36 +938,70 @@ export default function NewAuditRequestPage() {
                   </select>
                 </div>
 
-                <div className="space-y-1.5">
+                {/* Non-blockchain repo alert */}
+                {repoHasBlockchainFiles === false && (
+                  <div className="sm:col-span-2 p-3.5 rounded-xl border border-signal-critical/30 bg-signal-critical/5 text-signal-critical space-y-1">
+                    <div className="flex items-center gap-2 font-semibold text-xs text-signal-critical">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-signal-critical" />
+                      <span>Non-Blockchain Repository Detected</span>
+                    </div>
+                    <p className="text-[11px] text-text-muted leading-relaxed">
+                      {repoInspectionMessage ||
+                        "This repository contains zero supported smart contract files (.sol, .vy, .rs, .cairo, .move, .yul, .tact). Zyron only audits blockchain smart contract code. Please select a repository containing smart contracts to proceed."}
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5 sm:col-span-2">
                   <label className="text-xs font-medium text-text-muted block">
-                    Detected Contract Files ({availableContracts.length})
+                    Detected Smart Contract Files ({availableContracts.length})
                   </label>
-                  <div className="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto p-1.5 rounded-xl bg-[#F8F9FA] dark:bg-bg-void/50 border border-border-hairline">
-                    {availableContracts.map((c) => (
-                      <span
-                        key={c}
-                        className="px-2 py-0.5 rounded-md bg-white dark:bg-bg-panel border border-border-hairline text-[11px] font-mono text-text-primary flex items-center gap-1"
-                      >
-                        <Check className="h-3 w-3 text-signal-resolved" />
-                        {c.split("/").pop()}
+                  <div className="flex flex-wrap gap-1.5 min-h-12 max-h-24 overflow-y-auto p-2 rounded-xl bg-[#F8F9FA] dark:bg-bg-void/50 border border-border-hairline items-center">
+                    {availableContracts.length > 0 ? (
+                      availableContracts.map((c) => (
+                        <span
+                          key={c}
+                          className="px-2 py-0.5 rounded-md bg-white dark:bg-bg-panel border border-border-hairline text-[11px] font-mono text-text-primary flex items-center gap-1"
+                        >
+                          <Check className="h-3 w-3 text-signal-resolved" />
+                          {c.split("/").pop()}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-[11px] text-signal-critical flex items-center gap-1.5 italic font-sans">
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
+                        No smart contract files detected (.sol, .vy, .rs, .cairo, .move, .yul, .tact)
                       </span>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex flex-col items-end gap-1.5">
             <ExpandingButton
               variant="accent"
               rounded="xl"
               size="md"
-              onClick={() => setCurrentStep(2)}
+              disabled={availableContracts.length === 0 || isLoadingContracts || repoHasBlockchainFiles === false}
+              onClick={() => {
+                if (availableContracts.length === 0 || repoHasBlockchainFiles === false) {
+                  toast.error("Cannot proceed: Selected repository contains no supported blockchain smart contract files.");
+                  return;
+                }
+                setCurrentStep(2);
+              }}
               icon={<ArrowRight className="h-4 w-4" />}
             >
               Continue to Scope & Metadata
             </ExpandingButton>
+            {(availableContracts.length === 0 || repoHasBlockchainFiles === false) && (
+              <span className="text-[11px] text-signal-critical flex items-center gap-1 font-medium">
+                <AlertTriangle className="h-3 w-3 shrink-0" />
+                Repository must contain at least one smart contract file to proceed.
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -965,8 +1044,19 @@ export default function NewAuditRequestPage() {
                     value={contractFileName}
                     onChange={(e) => setContractFileName(e.target.value)}
                     placeholder="e.g. UniswapV2Pair.sol"
-                    className="w-full h-10 px-3.5 rounded-xl bg-white dark:bg-bg-panel border border-accent-scan/40 font-mono text-xs text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-scan shadow-2xs"
+                    className={cn(
+                      "w-full h-10 px-3.5 rounded-xl bg-white dark:bg-bg-panel font-mono text-xs text-text-primary focus:outline-hidden focus:ring-1 shadow-2xs",
+                      isBlockchainContract(contractFileName)
+                        ? "border border-accent-scan/40 focus:ring-accent-scan"
+                        : "border border-signal-critical/60 focus:ring-signal-critical"
+                    )}
                   />
+                  {!isBlockchainContract(contractFileName) && (
+                    <span className="text-[11px] text-signal-critical flex items-center gap-1 font-medium pt-0.5">
+                      <AlertTriangle className="h-3 w-3 shrink-0" />
+                      Filename must end with a valid smart contract extension (.sol, .vy, .rs, .cairo, .move, .yul, .tact)
+                    </span>
+                  )}
 
                   {/* Quick Select from detected contracts */}
                   {availableContracts.length > 0 && (
@@ -1106,7 +1196,14 @@ export default function NewAuditRequestPage() {
               variant="accent"
               rounded="xl"
               size="md"
-              onClick={() => setCurrentStep(3)}
+              disabled={!isBlockchainContract(contractFileName)}
+              onClick={() => {
+                if (!isBlockchainContract(contractFileName)) {
+                  toast.error("Please enter a valid smart contract filename (.sol, .vy, .rs, .cairo, .move, .yul, .tact)");
+                  return;
+                }
+                setCurrentStep(3);
+              }}
               icon={<ArrowRight className="h-4 w-4" />}
             >
               Continue to Invariants
