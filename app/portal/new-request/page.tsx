@@ -31,6 +31,8 @@ import {
   CheckCircle2,
   Cpu,
   Terminal,
+  Plus,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,6 +94,8 @@ export default function NewAuditRequestPage() {
   const [userRepos, setUserRepos] = React.useState<GithubRepoItem[]>([]);
   const [userOrgs, setUserOrgs] = React.useState<GithubOrgItem[]>([]);
   const [selectedOrgLogin, setSelectedOrgLogin] = React.useState<string>("personal");
+  const [githubManageAccessUrl, setGithubManageAccessUrl] = React.useState<string>("https://github.com/settings/connections/applications");
+  const [isConnectOrgModalOpen, setIsConnectOrgModalOpen] = React.useState<boolean>(false);
   const [isRestrictedOrg, setIsRestrictedOrg] = React.useState<{ isRestricted: boolean; message?: string; approvalUrl?: string } | null>(null);
   const [isLoadingGithubData, setIsLoadingGithubData] = React.useState<boolean>(false);
   const [repoSearch, setRepoSearch] = React.useState<string>("");
@@ -174,6 +178,9 @@ export default function NewAuditRequestPage() {
     try {
       const res = await apiClient.get("/auth/github/orgs");
       setUserOrgs(res.data?.orgs || []);
+      if (res.data?.manageAccessUrl) {
+        setGithubManageAccessUrl(res.data.manageAccessUrl);
+      }
     } catch (err: any) {
       console.warn("Failed to load GitHub organizations:", err);
     }
@@ -749,6 +756,29 @@ export default function NewAuditRequestPage() {
                               <span>@{org.login}</span>
                             </button>
                           ))}
+
+                          <button
+                            type="button"
+                            onClick={() => setIsConnectOrgModalOpen(true)}
+                            className="px-2.5 py-1 rounded-lg text-xs font-medium text-accent-scan hover:bg-accent-scan/10 border border-dashed border-accent-scan/40 transition-all cursor-pointer flex items-center gap-1 shrink-0"
+                            title="Connect or grant access to more GitHub organizations"
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>Connect Org</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              loadGithubOrgs();
+                              loadReposForScope(selectedOrgLogin);
+                              toast.success("Organization list refreshed.");
+                            }}
+                            className="p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-white dark:hover:bg-bg-panel transition-all cursor-pointer shrink-0"
+                            title="Refresh organizations list"
+                          >
+                            <RefreshCw className={cn("h-3.5 w-3.5", isLoadingGithubData && "animate-spin text-accent-scan")} />
+                          </button>
                         </div>
                       </div>
 
@@ -1536,6 +1566,115 @@ export default function NewAuditRequestPage() {
             >
               {isSubmitting ? "Enqueuing Audit..." : "Submit Audit Request"}
             </ExpandingButton>
+          </div>
+        </div>
+      )}
+
+      {/* ─── CONNECT NEW GITHUB ORGANIZATION MODAL ─── */}
+      {isConnectOrgModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-in fade-in">
+          <div className="max-w-md w-full rounded-2xl bg-white dark:bg-bg-panel border border-border-hairline p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-border-hairline">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-xl bg-accent-scan/10 text-accent-scan flex items-center justify-center">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm text-text-primary">
+                    Connect GitHub Organization
+                  </h3>
+                  <p className="text-[11px] text-text-muted">
+                    Grant repository audit access for your team or DAO
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsConnectOrgModalOpen(false)}
+                className="p-1 rounded-lg hover:bg-[#F2F4F7] dark:hover:bg-bg-void text-text-muted hover:text-text-primary cursor-pointer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs text-text-muted leading-relaxed">
+              <p>
+                GitHub organizations often enforce third-party application policies. To audit repositories in an organization you recently joined or created, grant access to the <strong>Zyron Security App</strong>.
+              </p>
+
+              <div className="p-3.5 rounded-xl bg-[#F8F9FA] dark:bg-bg-void/60 border border-border-hairline space-y-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-accent-scan/10 text-accent-scan flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                    1
+                  </div>
+                  <div className="space-y-1">
+                    <div className="font-semibold text-text-primary text-xs">
+                      Grant Access on GitHub
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                      Open your GitHub Authorized Applications page and click <strong>Grant</strong> or <strong>Request</strong> next to your organization name.
+                    </p>
+                    <a
+                      href={githubManageAccessUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent-scan text-white font-medium text-xs hover:bg-accent-scan/90 transition-colors mt-1 cursor-pointer"
+                    >
+                      <span>Open GitHub Organization Permissions</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+
+                <div className="pt-2.5 border-t border-border-hairline/60 flex items-start gap-2.5">
+                  <div className="h-5 w-5 rounded-full bg-accent-scan/10 text-accent-scan flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">
+                    2
+                  </div>
+                  <div className="space-y-1">
+                    <div className="font-semibold text-text-primary text-xs">
+                      Or Re-Authorize with Consent
+                    </div>
+                    <p className="text-[11px] text-text-muted">
+                      Re-run the GitHub authorization flow to review and select organizations directly on the OAuth screen.
+                    </p>
+                    <a
+                      href={`${apiClient.defaults.baseURL || "http://localhost:4000/api/v1"}/auth/github?redirect=/portal/new-request&prompt=consent`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-bg-panel border border-border-hairline text-text-primary font-medium text-xs hover:bg-[#F2F4F7] dark:hover:bg-bg-void transition-colors mt-1 cursor-pointer"
+                    >
+                      <span>Re-authorize on GitHub (OAuth Prompt)</span>
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-2 border-t border-border-hairline">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="rounded-xl cursor-pointer"
+                onClick={() => {
+                  loadGithubOrgs();
+                  loadReposForScope(selectedOrgLogin);
+                  toast.success("Organization list refreshed.");
+                  setIsConnectOrgModalOpen(false);
+                }}
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                I Granted Access, Refresh
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl cursor-pointer"
+                onClick={() => setIsConnectOrgModalOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       )}
