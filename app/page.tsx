@@ -48,7 +48,7 @@ import { Badge } from "@/components/ui/badge";
 import { ExpandingButton } from "@/components/ui/expanding-button";
 import { ChainLogo } from "@/components/ui/chain-logos";
 import { InteractiveDashboardDemo } from "@/components/interactive-dashboard-demo";
-import { HackathonChainsShowcase } from "@/components/hackathon-chains-showcase";
+import { SupportedChainsShowcase } from "@/components/supported-chains-showcase";
 import { useAuth } from "@/lib/auth-context";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useRouter } from "next/navigation";
@@ -630,13 +630,13 @@ export default function LandingPage() {
       </main>
 
       {/* ========================================================================= */}
-      {/* SECTION 2: HACKATHON TRIAD SHOWCASE: ETHEREUM, ARBITRUM & ROBINHOOD       */}
+      {/* SECTION 2: SUPPORTED CHAINS (ARBITRUM, ETHEREUM & ROBINHOOD)              */}
       {/* ========================================================================= */}
-      <HackathonChainsShowcase />
+      <SupportedChainsShowcase />
 
       {/* ========================================================================= */}
       {/* PREVIOUS DESIGN: 3-ROW PARALLAX SUPPORTED BLOCKCHAINS & RUNTIMES          */}
-      {/* (COMMENTED OUT TEMPORARILY FOR HACKATHON APPLICATION)                     */}
+      {/* (COMMENTED OUT TEMPORARILY)                                               */}
       {/* ========================================================================= */}
       {/*
       <section id="ecosystem" className="chains-section relative py-20 border-t border-border-hairline bg-bg-void/80 overflow-hidden">
