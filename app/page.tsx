@@ -632,7 +632,9 @@ export default function LandingPage() {
       {/* ========================================================================= */}
       {/* SECTION 2: SUPPORTED CHAINS (ARBITRUM, ETHEREUM & ROBINHOOD)              */}
       {/* ========================================================================= */}
-      <SupportedChainsShowcase />
+      <div id="ecosystem" className="w-full relative z-20">
+        <SupportedChainsShowcase />
+      </div>
 
       {/* ========================================================================= */}
       {/* PREVIOUS DESIGN: 3-ROW PARALLAX SUPPORTED BLOCKCHAINS & RUNTIMES          */}
