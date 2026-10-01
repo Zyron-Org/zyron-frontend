@@ -91,7 +91,8 @@ export default function NewAuditRequestPage() {
   );
   const [userRepos, setUserRepos] = React.useState<GithubRepoItem[]>([]);
   const [userOrgs, setUserOrgs] = React.useState<GithubOrgItem[]>([]);
-  const [selectedOrgLogin, setSelectedOrgLogin] = React.useState<string>("");
+  const [selectedOrgLogin, setSelectedOrgLogin] = React.useState<string>("personal");
+  const [isRestrictedOrg, setIsRestrictedOrg] = React.useState<{ isRestricted: boolean; message?: string; approvalUrl?: string } | null>(null);
   const [isLoadingGithubData, setIsLoadingGithubData] = React.useState<boolean>(false);
   const [repoSearch, setRepoSearch] = React.useState<string>("");
   const [visibilityFilter, setVisibilityFilter] = React.useState<"all" | "private" | "public">("all");
@@ -167,38 +168,55 @@ export default function NewAuditRequestPage() {
     return "48–72 Hours";
   }, [calculatedSloc]);
 
-  // Load GitHub Repos on mount if connected
-  const loadGithubReposAndOrgs = React.useCallback(async () => {
+  // Fetch connected user's GitHub organizations
+  const loadGithubOrgs = React.useCallback(async () => {
     if (!isGithubConnected) return;
-
-    setIsLoadingGithubData(true);
     try {
-      const [reposRes, orgsRes] = await Promise.all([
-        apiClient.get("/auth/github/repos", { params: { per_page: 100 } }),
-        apiClient.get("/auth/github/orgs").catch(() => ({ data: { orgs: [] } })),
-      ]);
+      const res = await apiClient.get("/auth/github/orgs");
+      setUserOrgs(res.data?.orgs || []);
+    } catch (err: any) {
+      console.warn("Failed to load GitHub organizations:", err);
+    }
+  }, [isGithubConnected]);
 
-      const repos: GithubRepoItem[] = reposRes.data?.repos || [];
-      const orgs: GithubOrgItem[] = orgsRes.data?.orgs || [];
+  // Fetch repositories for current scope (personal or specific organization)
+  const loadReposForScope = React.useCallback(async (scope: string) => {
+    if (!isGithubConnected) return;
+    setIsLoadingGithubData(true);
+    setIsRestrictedOrg(null);
+    try {
+      const res = await apiClient.get("/auth/github/repos", {
+        params: {
+          org: scope === "personal" ? undefined : scope,
+          per_page: 100,
+        },
+      });
 
-      setUserRepos(repos);
-      setUserOrgs(orgs);
-      if (orgs.length > 0 && !selectedOrgLogin) {
-        setSelectedOrgLogin(orgs[0].login);
+      if (res.data?.isRestricted) {
+        setIsRestrictedOrg({
+          isRestricted: true,
+          message: res.data.message,
+          approvalUrl: res.data.approvalUrl,
+        });
+        setUserRepos([]);
+      } else {
+        setUserRepos(res.data?.repos || []);
       }
     } catch (err: any) {
       console.warn("Failed to load GitHub repositories:", err);
+      setUserRepos([]);
     } finally {
       setIsLoadingGithubData(false);
     }
-  }, [isGithubConnected, selectedOrgLogin]);
+  }, [isGithubConnected]);
 
   React.useEffect(() => {
     if (isGithubConnected) {
-      loadGithubReposAndOrgs();
+      loadGithubOrgs();
+      loadReposForScope(selectedOrgLogin);
       setScopeMode("personal");
     }
-  }, [isGithubConnected, loadGithubReposAndOrgs]);
+  }, [isGithubConnected, loadGithubOrgs, loadReposForScope, selectedOrgLogin]);
 
   // Fetch branches for a repo
   const fetchBranchesForRepo = async (repoUrl: string) => {
@@ -662,7 +680,7 @@ export default function NewAuditRequestPage() {
               )}
 
               {scopeMode === "personal" && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {!isGithubConnected ? (
                     <div className="p-6 rounded-xl bg-[#F8F9FA] dark:bg-bg-void/50 border border-border-hairline text-center space-y-3">
                       <GitBranch className="h-8 w-8 text-accent-scan mx-auto" />
@@ -671,37 +689,155 @@ export default function NewAuditRequestPage() {
                           Connect Your GitHub Account
                         </div>
                         <p className="text-[11px] text-text-muted max-w-sm mx-auto">
-                          Grant Zyron read access to your repositories to automatically ingest contracts and track commits.
+                          Grant Zyron read access to your personal and organization repositories to automatically ingest contracts and track commits.
                         </p>
                       </div>
-                      <Link href="/auth/login">
+                      <a href={`${apiClient.defaults.baseURL || "http://localhost:4000/api/v1"}/auth/github?redirect=/portal/new-request`}>
                         <Button variant="primary" size="sm">
                           Connect GitHub
                         </Button>
-                      </Link>
+                      </a>
                     </div>
                   ) : (
-                    <div className="space-y-2">
-                      <div className="text-xs font-semibold text-text-primary">
-                        Your GitHub Repositories
-                      </div>
-                      <div className="max-h-48 overflow-y-auto rounded-xl border border-border-hairline divide-y divide-border-hairline/60">
-                        {userRepos.map((repo) => (
+                    <div className="space-y-3">
+                      {/* Organization / Personal Scope Segmented Control */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-1 border-b border-border-hairline/60">
+                        <div className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
+                          <span>Repository Scope:</span>
+                          <span className="text-text-muted font-normal text-[11px]">
+                            Filter by personal account or organization
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1 overflow-x-auto p-1 bg-[#F8F9FA] dark:bg-bg-void/60 rounded-xl border border-border-hairline">
                           <button
-                            key={repo.id}
                             type="button"
-                            onClick={() => handleSelectGithubRepo(repo)}
+                            onClick={() => {
+                              setSelectedOrgLogin("personal");
+                              setSelectedRepo(null);
+                            }}
                             className={cn(
-                              "w-full p-2.5 px-3 flex items-center justify-between text-left text-xs transition-colors cursor-pointer",
-                              selectedRepo?.id === repo.id
-                                ? "bg-accent-scan/10 text-accent-scan font-medium"
-                                : "hover:bg-[#F8F9FA] dark:hover:bg-bg-void/50 text-text-primary"
+                              "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
+                              selectedOrgLogin === "personal"
+                                ? "bg-accent-scan text-white shadow-xs"
+                                : "text-text-muted hover:text-text-primary hover:bg-white dark:hover:bg-bg-panel"
                             )}
                           >
-                            <span className="truncate">{repo.fullName}</span>
-                            <span className="text-[10px] text-text-muted">{repo.defaultBranch}</span>
+                            <User className="h-3 w-3" />
+                            <span>Personal ({user?.githubLogin || "You"})</span>
                           </button>
-                        ))}
+
+                          {userOrgs.map((org) => (
+                            <button
+                              key={org.login}
+                              type="button"
+                              onClick={() => {
+                                setSelectedOrgLogin(org.login);
+                                setSelectedRepo(null);
+                              }}
+                              className={cn(
+                                "px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 shrink-0",
+                                selectedOrgLogin === org.login
+                                  ? "bg-accent-scan text-white shadow-xs"
+                                  : "text-text-muted hover:text-text-primary hover:bg-white dark:hover:bg-bg-panel"
+                              )}
+                            >
+                              {org.avatarUrl ? (
+                                <img src={org.avatarUrl} alt={org.login} className="h-3.5 w-3.5 rounded-full" />
+                              ) : (
+                                <Building2 className="h-3.5 w-3.5" />
+                              )}
+                              <span>@{org.login}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Search Bar for Repositories */}
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+                          <input
+                            type="text"
+                            value={repoSearch}
+                            onChange={(e) => setRepoSearch(e.target.value)}
+                            placeholder={`Search ${selectedOrgLogin === "personal" ? "personal" : "@" + selectedOrgLogin} repositories...`}
+                            className="w-full h-8 pl-8 pr-3 rounded-lg bg-white dark:bg-bg-panel border border-border-hairline text-xs text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-scan"
+                          />
+                        </div>
+                        {isLoadingGithubData && (
+                          <RefreshCw className="h-3.5 w-3.5 text-accent-scan animate-spin shrink-0" />
+                        )}
+                      </div>
+
+                      {/* Restricted Organization Notice */}
+                      {isRestrictedOrg && (
+                        <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 space-y-2">
+                          <div className="flex items-center gap-2 font-medium">
+                            <ShieldAlert className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                            <span>Third-Party Organization Access Restriction</span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-amber-800 dark:text-amber-300">
+                            {isRestrictedOrg.message}
+                          </p>
+                          {isRestrictedOrg.approvalUrl && (
+                            <a
+                              href={isRestrictedOrg.approvalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold underline text-amber-800 dark:text-amber-300 hover:text-amber-900"
+                            >
+                              <span>Grant Application Access on GitHub</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Repositories List */}
+                      {!isLoadingGithubData && userRepos.length === 0 && !isRestrictedOrg && (
+                        <div className="p-6 text-center text-xs text-text-muted bg-[#F8F9FA] dark:bg-bg-void/50 rounded-xl border border-border-hairline">
+                          No repositories found in this scope.
+                        </div>
+                      )}
+
+                      <div className="max-h-56 overflow-y-auto rounded-xl border border-border-hairline divide-y divide-border-hairline/60">
+                        {userRepos
+                          .filter((r) =>
+                            repoSearch.trim() === ""
+                              ? true
+                              : r.name.toLowerCase().includes(repoSearch.toLowerCase()) ||
+                                r.fullName.toLowerCase().includes(repoSearch.toLowerCase())
+                          )
+                          .map((repo) => (
+                            <button
+                              key={repo.id}
+                              type="button"
+                              onClick={() => handleSelectGithubRepo(repo)}
+                              className={cn(
+                                "w-full p-2.5 px-3 flex items-center justify-between text-left text-xs transition-colors cursor-pointer",
+                                selectedRepo?.id === repo.id
+                                  ? "bg-accent-scan/10 text-accent-scan font-medium"
+                                  : "hover:bg-[#F8F9FA] dark:hover:bg-bg-void/50 text-text-primary"
+                              )}
+                            >
+                              <div className="flex items-center gap-2 truncate">
+                                {repo.private ? (
+                                  <Lock className="h-3 w-3 text-amber-500 shrink-0" />
+                                ) : (
+                                  <GitBranch className="h-3 w-3 text-text-muted shrink-0" />
+                                )}
+                                <span className="truncate font-medium">{repo.fullName}</span>
+                                {repo.language && (
+                                  <span className="text-[10px] px-1.5 py-0.2 rounded bg-black/5 dark:bg-white/5 text-text-muted">
+                                    {repo.language}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[10px] text-text-muted shrink-0 font-mono">
+                                {repo.defaultBranch}
+                              </span>
+                            </button>
+                          ))}
                       </div>
                     </div>
                   )}
