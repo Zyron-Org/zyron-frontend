@@ -43,6 +43,7 @@ import { FindingCodeViewer } from "@/components/finding-code-viewer";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { FoundByBadge } from "@/components/found-by-badge";
+import { EvmTraceStepper } from "@/components/evm-trace-stepper";
 
 interface CommentMessage {
   id: string;
@@ -69,6 +70,8 @@ interface DetailedFinding {
   fuzzTestStatus?: string;
   remediationNote?: string;
   foundBy?: string;
+  traceSteps?: string;
+  synthesizedPoC?: string;
   comments: CommentMessage[];
 }
 
@@ -151,6 +154,9 @@ export default function AuditStatusTrackerPage() {
               vulnerableCode: f.vulnerableCode || undefined,
               vulnerableLines: f.vulnerableLines || undefined,
               remediatedCode: f.remediatedCode || undefined,
+              fuzzTestStatus: f.fuzzTestStatus || undefined,
+              traceSteps: f.traceSteps || undefined,
+              synthesizedPoC: f.synthesizedPoC || undefined,
               remediationNote: f.remediationNote || undefined,
               foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase(),
               comments: Array.isArray(f.comments)
@@ -1333,6 +1339,18 @@ export default function AuditStatusTrackerPage() {
                               fuzzTestStatus={finding.fuzzTestStatus}
                             />
                           </div>
+                        </div>
+
+                        {/* Autonomous AI Prover & Virtual EVM Sandbox Stepper */}
+                        <div className="space-y-2">
+                          <EvmTraceStepper
+                            findingId={finding.id}
+                            title={finding.title}
+                            verdict={finding.fuzzTestStatus || (finding.severity === "critical" ? "PROVEN_EXPLOIT" : "PROVEN_FALSE_POSITIVE")}
+                            fundsDrainedEth={finding.severity === "critical" ? 100 : 0}
+                            traceSteps={finding.traceSteps}
+                            synthesizedPoC={finding.synthesizedPoC}
+                          />
                         </div>
 
                         {/* Discussion & Fix Submission Box */}

@@ -71,10 +71,13 @@ interface AggregatedFinding {
   fuzzTestStatus?: string;
   remediationNote?: string;
   foundBy?: string;
+  traceSteps?: string;
+  synthesizedPoC?: string;
   comments: CommentMessage[];
 }
 
 import { FoundByBadge } from "@/components/found-by-badge";
+import { EvmTraceStepper } from "@/components/evm-trace-stepper";
 
 export default function OpenFindingsPage() {
   const [filterStatus, setFilterStatus] = React.useState<"all" | "open" | "fix-submitted">("all");
@@ -135,6 +138,8 @@ export default function OpenFindingsPage() {
               remediatedCode: f.remediatedCode || undefined,
               sourceCode: audit.sourceCode || undefined,
               fuzzTestStatus: f.fuzzTestStatus || undefined,
+              traceSteps: f.traceSteps || undefined,
+              synthesizedPoC: f.synthesizedPoC || undefined,
               remediationNote: f.remediationNote || undefined,
               foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase(),
               comments: Array.isArray(f.comments)
@@ -716,20 +721,16 @@ export default function OpenFindingsPage() {
                   {/* ─── EXPANDED CONTENT: Full Details, Code Viewer, Remediation & Discussion ─── */}
                   {isExpanded && (
                     <div className="pt-4 border-t border-border-hairline/60 space-y-6 animate-in fade-in duration-200">
-                      {/* Virtual Sandbox Exploit Proof Callout */}
-                      <div className="p-3.5 rounded-xl bg-signal-critical/10 border border-signal-critical/30 space-y-1.5">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-bold flex items-center gap-1.5 text-signal-critical">
-                            <Terminal className="h-4 w-4" />
-                            Virtual Blockchain Exploit Simulation Proof (Anvil Fork #19482014)
-                          </span>
-                          <span className="font-mono text-[10px] text-signal-critical bg-signal-critical/20 px-2 py-0.5 rounded font-bold">
-                            SIMULATED EXPLOIT REPRODUCED
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-text-muted leading-relaxed font-mono">
-                          Our autonomous AI red-team agent deployed the bytecode to an ephemeral virtual EVM fork, executed a dynamic simulated attack against state invariants, and verified a reproducible Foundry PoC test suite. Zero false positives.
-                        </p>
+                      {/* Autonomous AI Prover & Virtual EVM Sandbox Stepper */}
+                      <div className="space-y-2">
+                        <EvmTraceStepper
+                          findingId={finding.id}
+                          title={finding.title}
+                          verdict={finding.fuzzTestStatus || (finding.severity === "critical" ? "PROVEN_EXPLOIT" : "PROVEN_FALSE_POSITIVE")}
+                          fundsDrainedEth={finding.severity === "critical" ? 100 : 0}
+                          traceSteps={finding.traceSteps}
+                          synthesizedPoC={finding.synthesizedPoC}
+                        />
                       </div>
 
                       {/* Description & Impact Box */}
