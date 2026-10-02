@@ -35,7 +35,6 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Clock,
-  Radio,
   FileText,
   DollarSign,
   Activity,
@@ -222,6 +221,7 @@ export default function PitchDeckPage() {
     const name = v.name.toLowerCase();
     return (
       name.includes("female") ||
+      name.includes("voice 2") ||
       name.includes("samantha") ||
       name.includes("victoria") ||
       name.includes("karen") ||
@@ -233,7 +233,10 @@ export default function PitchDeckPage() {
       name.includes("tessa") ||
       name.includes("allison") ||
       name.includes("ava") ||
-      name.includes("susan")
+      name.includes("susan") ||
+      name.includes("stephanie") ||
+      name.includes("ekaette") ||
+      (name.includes("siri") && !name.includes("voice 1"))
     );
   };
 
@@ -243,7 +246,7 @@ export default function PitchDeckPage() {
     if (isFemaleVoice(v)) return false;
     return (
       name.includes("male") ||
-      name.includes("guy") ||
+      name.includes("voice 1") ||
       name.includes("daniel") ||
       name.includes("george") ||
       name.includes("arthur") ||
@@ -258,7 +261,9 @@ export default function PitchDeckPage() {
       name.includes("gordon") ||
       name.includes("rishi") ||
       name.includes("tariq") ||
-      !isFemaleVoice(v)
+      name.includes("lesedi") ||
+      name.includes("sibusiso") ||
+      name.includes("lwandle")
     );
   };
 
@@ -269,12 +274,18 @@ export default function PitchDeckPage() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
-        // Sort African voices first
+        // Sort Male & African voices first
         const sorted = [...voices].sort((a, b) => {
-          const aAf = isAfricanVoice(a);
-          const bAf = isAfricanVoice(b);
-          if (aAf && !bAf) return -1;
-          if (!aAf && bAf) return 1;
+          const aAfMale = isAfricanVoice(a) && isMaleVoice(a);
+          const bAfMale = isAfricanVoice(b) && isMaleVoice(b);
+          if (aAfMale && !bAfMale) return -1;
+          if (!aAfMale && bAfMale) return 1;
+
+          const aMale = isMaleVoice(a);
+          const bMale = isMaleVoice(b);
+          if (aMale && !bMale) return -1;
+          if (!aMale && bMale) return 1;
+
           return 0;
         });
 
@@ -284,21 +295,14 @@ export default function PitchDeckPage() {
         setHasAfricanVoice(africanFound);
 
         const preferredVoice =
-          // 1. Male African / Nigerian voice
+          // 1. Male African voice (e.g. South Africa Siri Voice 1, Sibusiso, Google Nigeria Male)
           voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
-          voices.find((v) => isAfricanVoice(v)) ||
-          // 2. Male English voice (e.g. Daniel, George, Arthur, David, Fred, Alex)
+          // 2. Male English voice (e.g. Daniel, Arthur, Alex, Fred, George, David)
           voices.find((v) => v.lang.startsWith("en") && isMaleVoice(v)) ||
-          voices.find(
-            (v) =>
-              v.name.includes("Daniel") ||
-              v.name.includes("George") ||
-              v.name.includes("David") ||
-              v.name.includes("Arthur") ||
-              v.name.includes("Alex") ||
-              v.name.includes("Fred")
-          ) ||
-          voices.find((v) => v.lang.startsWith("en")) ||
+          // 3. Any Male voice
+          voices.find((v) => isMaleVoice(v)) ||
+          // 4. Any African voice (fallback only if no male voice exists)
+          voices.find((v) => isAfricanVoice(v)) ||
           voices[0];
 
         if (preferredVoice) {
@@ -343,14 +347,15 @@ export default function PitchDeckPage() {
       if (!slide || !slide.script) return;
 
       const utterance = new SpeechSynthesisUtterance(slide.script);
-      utterance.rate = 0.96; // Fluent, energetic presentation pacing
-      utterance.pitch = 0.92; // Deep, confident tone
+      utterance.rate = 0.95; // Fluent, energetic presentation pacing
+      utterance.pitch = 0.82; // Deep, confident male tone
 
       const voices = window.speechSynthesis.getVoices();
       const activeVoice =
         (selectedVoiceURI && voices.find((v) => v.voiceURI === selectedVoiceURI)) ||
         selectedVoiceRef.current ||
         voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
+        voices.find((v) => isMaleVoice(v) && v.lang.startsWith("en")) ||
         voices.find((v) => isMaleVoice(v)) ||
         voices[0];
 
@@ -633,16 +638,6 @@ export default function PitchDeckPage() {
         </div>
       </header>
 
-      {/* Teleprompter Voiceover Caption Bar */}
-      {isSpeaking && currentCaption && (
-        <div className="mt-3 max-w-5xl w-full mx-auto p-2.5 rounded bg-bg-panel border border-accent-scan/40 flex items-center gap-3 animate-fadeIn z-20 font-mono text-xs">
-          <div className="flex items-center gap-1.5 text-accent-scan shrink-0 font-bold">
-            <Radio className="h-4 w-4 text-accent-scan animate-pulse" />
-            <span>[LIVE PRESENTATION]</span>
-          </div>
-          <p className="text-text-primary text-xs truncate font-sans font-medium">{currentCaption}</p>
-        </div>
-      )}
 
       {/* Main Slide Presentation Stage */}
       <main className="flex-1 flex flex-col justify-center items-center py-6 sm:py-8 max-w-5xl w-full mx-auto relative z-10">
