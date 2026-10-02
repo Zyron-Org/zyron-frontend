@@ -59,7 +59,7 @@ interface DetailedFinding {
   title: string;
   severity: "critical" | "high" | "medium" | "low";
   cvss: string;
-  status: "open" | "fix-submitted" | "resolved";
+  status: "open" | "fix-submitted" | "resolved" | "wont-fix";
   taxonomy: string;
   location: string;
   impact: string;
@@ -72,6 +72,7 @@ interface DetailedFinding {
   foundBy?: string;
   traceSteps?: string;
   synthesizedPoC?: string;
+  falsePositive?: boolean;
   comments: CommentMessage[];
 }
 
@@ -247,6 +248,12 @@ export default function AuditStatusTrackerPage() {
 
   // Findings state: only populated if auditor has approved and sent them for fixes (CORRECTIONS_REQUESTED or COMPLETED)
   const [findings, setFindings] = React.useState<DetailedFinding[]>([]);
+
+  // Computed: Active non-FP findings and whether all findings are resolved
+  const nonFpFindings = findings.filter((f) => !f.falsePositive);
+  const openFindings = nonFpFindings.filter((f) => f.status !== "resolved" && f.status !== "wont-fix");
+  const allFindingsResolved = nonFpFindings.length > 0 && openFindings.length === 0;
+  const isRemediationVerified = allFindingsResolved && (rawStage === "CORRECTIONS_REQUESTED" || rawStage === "IN_REVIEW");
 
   const handleCopyAddress = () => {
     if (audit?.contractAddress) {
@@ -661,7 +668,10 @@ export default function AuditStatusTrackerPage() {
             <span className="px-2.5 py-0.5 rounded-md bg-[#F2F4F7] dark:bg-bg-void border border-border-hairline text-xs font-mono text-text-muted">
               {audit.contractFileName}
             </span>
-            <StatusPill status={normalizeStatus(audit.stage)} size="md" />
+            <StatusPill
+              status={isRemediationVerified ? "remediation-verified" : normalizeStatus(audit.stage)}
+              size="md"
+            />
           </div>
 
           <p className="text-xs sm:text-sm text-text-muted mt-1 max-w-3xl">
@@ -684,8 +694,33 @@ export default function AuditStatusTrackerPage() {
         </div>
       </div>
 
-      {/* ─── 2. CORRECTIONS REQUESTED ALERT & GLOBAL FIX SUBMISSION (If Active) ─── */}
-      {(audit.stage?.toLowerCase().includes("correction") || audit.stage === "CORRECTIONS_REQUESTED") && (
+      {/* ─── 2. REMEDIATION VERIFIED / CORRECTIONS REQUESTED ALERT & FIX SUBMISSION ─── */}
+      {isRemediationVerified ? (
+        <div className="rounded-2xl border border-signal-resolved/30 bg-signal-resolved/5 p-1.5 sm:p-2 shadow-xs animate-in fade-in duration-200">
+          <div className="rounded-xl border border-signal-resolved/20 bg-white dark:bg-bg-panel p-5 sm:p-6 space-y-4 shadow-xs">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-hairline/60 pb-3">
+              <div className="flex items-center gap-2.5 text-signal-resolved">
+                <CheckCircle2 className="h-5 w-5 shrink-0" />
+                <span className="font-display text-sm font-bold tracking-tight">
+                  Remediation Verified: All Identified Findings Cleared
+                </span>
+              </div>
+              <Badge severity="resolved" size="sm">
+                REMEDIATION VERIFIED
+              </Badge>
+            </div>
+
+            <p className="text-xs text-text-muted leading-relaxed">
+              Lead auditor <strong>{leadAuditorName}</strong> has reviewed and verified all remediation patches. Every reported vulnerability has been successfully resolved and closed. Your protocol has satisfied security criteria and is awaiting final attestation sealing.
+            </p>
+
+            <div className="flex items-center gap-2 text-xs text-signal-resolved font-medium pt-1">
+              <Check className="h-4 w-4" />
+              <span>0 open vulnerabilities remaining · Security Invariants Verified</span>
+            </div>
+          </div>
+        </div>
+      ) : (audit.stage?.toLowerCase().includes("correction") || audit.stage === "CORRECTIONS_REQUESTED") ? (
         <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-1.5 sm:p-2 shadow-xs animate-in fade-in duration-200">
           <div className="rounded-xl border border-amber-500/20 bg-white dark:bg-bg-panel p-5 sm:p-6 space-y-4 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border-hairline/60 pb-3">
@@ -750,7 +785,7 @@ export default function AuditStatusTrackerPage() {
             </form>
           </div>
         </div>
-      )}
+      ) : null}
 
       {fixesSubmittedSuccess && (
         <div className="p-4 rounded-xl bg-signal-resolved/10 border border-signal-resolved/30 text-signal-resolved text-xs font-medium flex items-center gap-2.5 animate-in fade-in">
@@ -1179,14 +1214,22 @@ export default function AuditStatusTrackerPage() {
             </div>
 
             {areFindingsReleased ? (
-              <div className="flex items-center gap-2">
-                <Badge severity="critical" size="sm">
-                  {findings.filter((f) => f.severity === "critical" && f.status !== "resolved").length} Critical
-                </Badge>
-                <Badge severity="high" size="sm">
-                  {findings.filter((f) => f.severity === "high" && f.status !== "resolved").length} High
-                </Badge>
-              </div>
+              openFindings.length === 0 ? (
+                <div className="flex items-center gap-2">
+                  <Badge severity="resolved" size="sm">
+                    ALL RESOLVED ✓
+                  </Badge>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Badge severity="critical" size="sm">
+                    {findings.filter((f) => f.severity === "critical" && f.status !== "resolved").length} Critical
+                  </Badge>
+                  <Badge severity="high" size="sm">
+                    {findings.filter((f) => f.severity === "high" && f.status !== "resolved").length} High
+                  </Badge>
+                </div>
+              )
             ) : (
               <Badge severity="high" size="sm">
                 Pending Auditor Approval
@@ -1454,81 +1497,98 @@ export default function AuditStatusTrackerPage() {
                             </div>
                           </div>
 
-                          {/* Submit Fix Commit */}
-                          <div className="p-4 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline space-y-3">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-hairline/60 pb-2">
-                              <div className="flex items-center gap-2 text-xs font-bold text-text-primary font-display">
-                                <GitCommit className="h-4 w-4 text-signal-resolved" />
-                                <span>Submit Remediation Commit for Re-Verification</span>
-                              </div>
-                              {finding.status === "fix-submitted" ? (
+                          {/* Remediation Status or Submit Fix Commit */}
+                          {finding.status === "resolved" ? (
+                            <div className="p-4 rounded-xl bg-signal-resolved/5 border border-signal-resolved/20 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2 text-xs font-bold text-signal-resolved font-display">
+                                  <CheckCircle2 className="h-4 w-4" />
+                                  <span>Vulnerability Remediation Verified</span>
+                                </div>
                                 <Badge severity="resolved" size="sm">
-                                  Awaiting Re-Verification
+                                  RESOLVED ✓
                                 </Badge>
-                              ) : (
-                                <Badge severity="critical" size="sm">
-                                  Fix Pending
-                                </Badge>
-                              )}
+                              </div>
+                              <p className="text-xs text-text-muted leading-relaxed">
+                                Lead auditor verified that the patches applied to this vulnerability satisfy all security invariants. No further client action is needed.
+                              </p>
                             </div>
-
-                            <p className="text-xs text-text-muted leading-relaxed">
-                              When your team has pushed fixes to your repo, input the commit SHA below to notify the lead auditor and trigger a re-audit pass on this finding.
-                            </p>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
-                              <div className="sm:col-span-4">
-                                <Input
-                                  isMono
-                                  placeholder="Commit SHA (e.g. 4b8f10e)"
-                                  value={commitInputs[finding.id]?.commitSha || ""}
-                                  onChange={(e) =>
-                                    setCommitInputs((prev) => ({
-                                      ...prev,
-                                      [finding.id]: {
-                                        commitSha: e.target.value,
-                                        summary: prev[finding.id]?.summary || "",
-                                      },
-                                    }))
-                                  }
-                                  prefix={<GitCommit className="h-3.5 w-3.5 text-accent-scan" />}
-                                  className="text-xs"
-                                />
+                          ) : (
+                            <div className="p-4 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline space-y-3">
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border-hairline/60 pb-2">
+                                <div className="flex items-center gap-2 text-xs font-bold text-text-primary font-display">
+                                  <GitCommit className="h-4 w-4 text-signal-resolved" />
+                                  <span>Submit Remediation Commit for Re-Verification</span>
+                                </div>
+                                {finding.status === "fix-submitted" ? (
+                                  <Badge severity="resolved" size="sm">
+                                    Awaiting Re-Verification
+                                  </Badge>
+                                ) : (
+                                  <Badge severity="critical" size="sm">
+                                    Fix Pending
+                                  </Badge>
+                                )}
                               </div>
 
-                              <div className="sm:col-span-8">
-                                <Input
-                                  placeholder="Remediation summary (e.g. Added nonReentrant modifier)..."
-                                  value={commitInputs[finding.id]?.summary || ""}
-                                  onChange={(e) =>
-                                    setCommitInputs((prev) => ({
-                                      ...prev,
-                                      [finding.id]: {
-                                        commitSha: prev[finding.id]?.commitSha || "",
-                                        summary: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                  className="text-xs"
-                                />
+                              <p className="text-xs text-text-muted leading-relaxed">
+                                When your team has pushed fixes to your repo, input the commit SHA below to notify the lead auditor and trigger a re-audit pass on this finding.
+                              </p>
+
+                              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-1">
+                                <div className="sm:col-span-4">
+                                  <Input
+                                    isMono
+                                    placeholder="Commit SHA (e.g. 4b8f10e)"
+                                    value={commitInputs[finding.id]?.commitSha || ""}
+                                    onChange={(e) =>
+                                      setCommitInputs((prev) => ({
+                                        ...prev,
+                                        [finding.id]: {
+                                          commitSha: e.target.value,
+                                          summary: prev[finding.id]?.summary || "",
+                                        },
+                                      }))
+                                    }
+                                    prefix={<GitCommit className="h-3.5 w-3.5 text-accent-scan" />}
+                                    className="text-xs"
+                                  />
+                                </div>
+
+                                <div className="sm:col-span-8">
+                                  <Input
+                                    placeholder="Remediation summary (e.g. Added nonReentrant modifier)..."
+                                    value={commitInputs[finding.id]?.summary || ""}
+                                    onChange={(e) =>
+                                      setCommitInputs((prev) => ({
+                                        ...prev,
+                                        [finding.id]: {
+                                          commitSha: prev[finding.id]?.commitSha || "",
+                                          summary: e.target.value,
+                                        },
+                                      }))
+                                    }
+                                    className="text-xs"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="flex justify-end pt-1">
+                                <Button
+                                  type="button"
+                                  variant="secondary"
+                                  className="border-signal-resolved/40 text-signal-resolved hover:bg-signal-resolved/10 font-bold"
+                                  size="sm"
+                                  isLoading={submittingFix[finding.id]}
+                                  rightIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
+                                  onClick={() => handleSubmitFix(finding.id)}
+                                  disabled={!commitInputs[finding.id]?.commitSha?.trim()}
+                                >
+                                  Submit Fix for Re-Verification
+                                </Button>
                               </div>
                             </div>
-
-                            <div className="flex justify-end pt-1">
-                              <Button
-                                type="button"
-                                variant="secondary"
-                                className="border-signal-resolved/40 text-signal-resolved hover:bg-signal-resolved/10 font-bold"
-                                size="sm"
-                                isLoading={submittingFix[finding.id]}
-                                rightIcon={<CheckCircle2 className="h-3.5 w-3.5" />}
-                                onClick={() => handleSubmitFix(finding.id)}
-                                disabled={!commitInputs[finding.id]?.commitSha?.trim()}
-                              >
-                                Submit Fix for Re-Verification
-                              </Button>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
                     )}
