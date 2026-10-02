@@ -64,97 +64,97 @@ const SLIDES_META: SlideData[] = [
   {
     id: "cover",
     badge: "Executive Pitch Deck",
-    title: "ZYRON PROTOCOL SECURITY",
-    subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
+    title: "ZYRON AI SECURITY ENGINE",
+    subtitle: "Dual-Engine AI & Mathematical Proving Infrastructure for Web3 Protocols",
     category: "Vision",
     script:
-      "Welcome to Zairon Protocol Security. We are building the cryptographic security infrastructure for Web3 protocols. Traditional security relies on slow, opaque PDF reports. Zairon replaces this with automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
+      "Welcome to Zairon. We are building the AI security infrastructure for Web3 protocols. Rather than relying on speculative linters or four-week manual reviews, Zairon combines static A-S-T semantic reasoning with an Autonomous Red-Team E-V-M Sandbox agent that proves exploit viability before human sign-off.",
   },
   {
     id: "problem",
     badge: "The Problem",
-    title: "The Web3 Security Bottleneck",
-    subtitle: "Smart contracts secure tens of billions in value, yet audits remain slow, expensive, and unverifiable.",
+    title: "The Speculative Audit Bottleneck",
+    subtitle: "Smart contracts secure over $100B, yet security relies on noisy linters and slow $50k+ manual audits.",
     category: "Market",
     script:
-      "Smart contracts secure over one hundred billion dollars in value, yet auditing remains a massive bottleneck. Protocol teams wait six to ten weeks for top firms, only to receive static PDF reports that become outdated the moment code changes. Even audited protocols still get exploited.",
+      "Smart contracts secure over one hundred billion dollars, yet security is a bottleneck. Generic AI linters flood teams with eighty percent false positives, while manual audits take four to eight weeks and cost up to one hundred fifty thousand dollars. Speculative bug finding fails Web3.",
   },
   {
     id: "solution",
     badge: "The Solution",
-    title: "Continuous, Verifiable Protocol Security",
-    subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
+    title: "Zyron Dual-Engine AI Architecture",
+    subtitle: "AST Semantic Reasoning + Autonomous Red-Team EVM Sandbox Exploit Prover.",
     category: "Product",
     script:
-      "Zairon solves this with three continuous layers: automated A-S-T static analysis executed in seconds, structured dual-pane human auditor review to eliminate false alarms, and immutable on-chain attestations anchoring bytecode hashes and findings onchain for independent verification.",
+      "Zairon replaces speculative bug finding with automated mathematical proof. Our Dual-Engine AI combines static A-S-T invariant analysis with an autonomous red-team agent that forks E-V-M mainnet state, synthesizes executable attack vectors, and generates reproducible Foundry proof of concepts.",
   },
   {
     id: "technology",
-    badge: "Technology",
-    title: "14-Pass AST & Control-Flow Analysis Engine",
-    subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
+    badge: "AI Layer 1",
+    title: "AST & Invariant Semantic Engine",
+    subtitle: "Deterministic Solidity parsing, opcode flow graphs, and protocol-specific invariant reasoning.",
     category: "Product",
     script:
-      "Our engine parses Solidity into Abstract Syntax Trees and Control Flow Graphs, executing fourteen specialized security passes. We scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks before human review even begins.",
+      "Layer one parses Solidity into Abstract Syntax Trees and opcode flow graphs. Unlike generic LLMs that guess syntax errors, our model reasons against protocol invariants—such as collateral solvency, share dilution, reentrancy guards, and oracle staleness—across complex multi-file storage layouts.",
   },
   {
     id: "human-review",
-    badge: "Human Review",
-    title: "Dual-Pane Auditor Workbench",
-    subtitle: "Automated tools surface candidates. Human experts make the final judgment.",
+    badge: "AI Layer 2",
+    title: "Autonomous Red-Team Prover (zyron-agent)",
+    subtitle: "Ephemeral virtual EVM state forking, active attack synthesis, and zero false positives.",
     category: "Product",
     script:
-      "Automated tools alone cannot catch complex economic exploits. In our Dual-Pane Auditor Workbench, certified human experts inspect code side-by-side with automated candidate findings. Auditors calibrate severities, write remediation guidance, and track fix verification in real time.",
+      "Layer two is our autonomous red-team microservice. It spins up an ephemeral virtual E-V-M fork, orchestrates multi-step transactions with flash loans, and executes attacks. If an invariant breaks, it generates an executable Foundry test suite dot-t-dot-sol. Unverified candidate bugs are eliminated.",
   },
   {
     id: "attestation",
-    badge: "On-Chain Attestation",
-    title: "Verifiable Certificates, Not Just PDFs",
-    subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
+    badge: "AI Layer 3",
+    title: "Dual-Pane Workbench & EVM Trace Replay",
+    subtitle: "Step-by-step transaction trace stepper emitting opcodes, gas consumption, and storage slot mutations.",
     category: "Product",
     script:
-      "Our core innovation is Verifiable Certificates instead of untrusted PDFs. When an audit is finalized, Zairon publishes an on-chain attestation anchoring the S-H-A two fifty-six bytecode hash, Merkle root of findings, and E-I-P seven twelve auditor signatures directly onto public E-V-M registries.",
+      "The AI emits a step-by-step transaction trace detailing opcodes, gas, and balance drains. In our Dual-Pane Workbench, senior auditors replay live proofs, write remediation guidance, and verify patches in real time—reducing audit turnaround from weeks to days.",
   },
   {
     id: "how-it-works",
     badge: "Lifecycle",
-    title: "Simple Audit Lifecycle",
-    subtitle: "Transparent audit process from client code submission to on-chain attestation.",
+    title: "5-Stage AI Audit Lifecycle",
+    subtitle: "Transparent audit process from code submission and EVM sandbox attack proving to on-chain attestation.",
     category: "Product",
     script:
-      "Our five-stage lifecycle is completely transparent: Stage one, client repository submission. Stage two, automated 14-pass A-S-T analysis. Stage three, dual-pane expert human review. Stage four, issue triage and fix verification. Stage five, final on-chain cryptographic attestation.",
+      "Our audit lifecycle is completely transparent: Stage one, scope ingestion. Stage two, A-S-T invariant analysis. Stage three, red-team E-V-M sandbox attack synthesis. Stage four, trace replay auditor triage. Stage five, final cryptographic on-chain attestation.",
   },
   {
     id: "market",
     badge: "Market Opportunity",
-    title: "Growing Demand for Better Security Infrastructure",
-    subtitle: "Sitting at the intersection of security tooling and on-chain trust.",
+    title: "Surging Demand for AI Security Infrastructure",
+    subtitle: "Sitting at the intersection of automated AI execution, security tooling, and on-chain trust.",
     category: "Market",
     script:
-      "Demand for verifiable security infrastructure is surging. Thousands of contracts deploy daily across Layer-2 rollups like Arbitrum, Base, and Optimism. Institutional players and real-world asset protocols now demand continuous, cryptographic security assurance over one-off compliance checks.",
+      "Demand for verifiable AI security is booming. Thousands of smart contracts deploy daily across Layer-2 rollups like Arbitrum, Base, and Optimism. Institutional real-world asset protocols demand continuous cryptographic proof over speculative P-D-F compliance checks.",
   },
   {
     id: "business-model",
     badge: "Business Model",
-    title: "Hybrid Revenue Model",
-    subtitle: "Fixed-price audit engagements, continuous scanning plans, and enterprise verification.",
+    title: "High-Margin Hybrid Revenue Model",
+    subtitle: "Fixed-price engagement fees for full AI audits + continuous pull-request security plans.",
     category: "Business",
     script:
-      "We operate a high-margin hybrid model: charging fixed-price engagement fees for full audits with on-chain attestations, combined with continuous security subscriptions for pull-request scanning and priority triage. This creates a predictable transition to annual recurring revenue.",
+      "We operate a high-margin hybrid model: charging fixed engagement fees for complete AI audits with on-chain attestations, alongside continuous subscriptions for pull-request scanning and priority sandbox triage—creating predictable annual recurring revenue.",
   },
   {
     id: "competition",
-    badge: "Competitive Position",
-    title: "Why Zyron Outperforms Legacy & Pure Scanners",
-    subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
+    badge: "Competitive Advantage",
+    title: "Why Zyron Outperforms Linters & Legacy Firms",
+    subtitle: "Mathematical proof over static linters, and 10x throughput over 6-week legacy manual audits.",
     category: "Business",
     script:
-      "Zairon combines compiler-level speed with deep human expertise and verifiable bytecode proofs. Traditional firms are slow and deliver static PDFs. Pure scanners suffer from high false positive rates. Zairon delivers fast, verifiable, and expert-reviewed security.",
+      "Static linters flood teams with false positives and cannot execute code. Legacy audit firms are slow, expensive, and deliver unlinked reports. Zairon delivers compiler speed, mathematical E-V-M exploit proofs, and on-chain verification that no legacy firm provides.",
   },
   {
     id: "roadmap",
     badge: "Execution & Roadmap",
-    title: "Current Status & Multi-Phase Roadmap",
+    title: "Current Status & Execution Roadmap",
     subtitle: "From core AST engine and Arbitrum Sepolia attestations to ERC-8004 auditor identity.",
     category: "Traction",
     script:
@@ -163,11 +163,11 @@ const SLIDES_META: SlideData[] = [
   {
     id: "vision",
     badge: "Vision & Next Steps",
-    title: "Building the Trust Layer for Smart Contract Security",
-    subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
+    title: "Building the Trust Layer for Web3 Security",
+    subtitle: "Replacing speculative audit claims with mathematical EVM proofs and on-chain attestations.",
     category: "Vision",
     script:
-      "Zairon is building the trust layer for smart contract security. We are onboarding design partner protocols, security researchers, and strategic supporters who share our vision for verifiable security. Join us in making smart contract security genuinely trusted onchain.",
+      "Zairon is building the trust layer for smart contract security. We are onboarding design partner protocols, security researchers, and strategic supporters who share our vision for verifiable AI security. Join us in making Web3 security genuinely trusted onchain.",
   },
 ];
 
@@ -837,26 +837,26 @@ function SlideCover({ onNext, onStart }: { onNext: () => void; onStart: () => vo
       {/* Eyebrow */}
       <div className="inline-flex items-center gap-2 px-3 py-1 rounded bg-bg-panel border border-border-hairline text-accent-scan text-xs font-mono">
         <Terminal className="h-3.5 w-3.5" />
-        <span>ZYRON PROTOCOL SECURITY — PITCH DECK</span>
+        <span>ZYRON AI SECURITY ENGINE — PITCH DECK</span>
       </div>
 
       {/* Hero Headline */}
       <div className="space-y-4">
         <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-text-primary leading-tight">
-          The Cryptographic Security Infrastructure for <span className="text-accent-scan">Web3 Protocols</span>
+          Dual-Engine AI & Mathematical Proving Infrastructure for <span className="text-accent-scan">Web3 Protocols</span>
         </h1>
         <p className="text-sm sm:text-base text-text-muted leading-relaxed max-w-2xl mx-auto font-sans">
-          Replacing slow, opaque PDF audits with automated AST static analysis, structured human review, and immutable on-chain attestations.
+          Replacing speculative linting with AST invariant reasoning, Autonomous Red-Team EVM sandbox attack proving, and immutable on-chain attestations.
         </p>
       </div>
 
       {/* 4 Pillars Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 w-full pt-2">
         {[
-          { label: "14 AST Passes", desc: "Deterministic analysis", icon: Code2 },
-          { label: "Dual-Auditor Review", desc: "Structured workbench", icon: Users },
-          { label: "On-Chain Proofs", desc: "Bytecode attestations", icon: FileCheck2 },
-          { label: "Continuous Security", desc: "Ongoing verification", icon: ShieldCheck },
+          { label: "AST Invariant Engine", desc: "Deterministic opcode parsing", icon: Code2 },
+          { label: "Red-Team Exploit Prover", desc: "zyron-agent EVM sandbox", icon: Cpu },
+          { label: "EVM Trace Stepper", desc: "Step-by-step opcode replay", icon: Activity },
+          { label: "Verifiable Proofs", desc: "On-chain bytecode attestations", icon: FileCheck2 },
         ].map((item, idx) => {
           const Icon = item.icon;
           return (
@@ -903,8 +903,8 @@ function SlideProblem() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
         badge="Slide 2 – Problem"
-        title="The Web3 Security Bottleneck"
-        description="Smart contracts secure tens of billions in value, yet the audit process remains slow, expensive, and unverifiable."
+        title="The Speculative Audit Bottleneck"
+        description="Smart contracts secure over $100B in value, yet Web3 security remains trapped between noisy linters and slow, expensive manual audits."
       />
 
       {/* Key Problems Grid */}
@@ -912,44 +912,44 @@ function SlideProblem() {
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-signal-high font-bold">PROBLEM 01</span>
-            <Clock className="h-4 w-4 text-signal-high" />
+            <AlertTriangle className="h-4 w-4 text-signal-high" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Long Wait Times</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Speculative Linters & 80% Noise</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Protocols face wait times often lasting 6–10 weeks at top audit firms, delaying product launches and protocol updates.
+            Generic AI linters guess syntax errors without code execution, flooding protocol teams with 80%+ false positive hallucination alerts.
           </p>
         </div>
 
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-signal-high font-bold">PROBLEM 02</span>
-            <FileText className="h-4 w-4 text-signal-high" />
+            <Clock className="h-4 w-4 text-signal-high" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Static PDF Reports</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">4–8 Week Audit Delays</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Audits yield static PDF reports that become outdated the moment code changes or patches are introduced.
+            Manual audit firms cost $50k–$150k+ and take 4 to 8 weeks to start, delaying protocol updates and product launches.
           </p>
         </div>
 
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-signal-high font-bold">PROBLEM 03</span>
-            <ShieldAlert className="h-4 w-4 text-signal-high" />
+            <FileText className="h-4 w-4 text-signal-high" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">No Bytecode Link</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">PDF Reports Unlinked to Bytecode</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            No cryptographic link exists between the audited source code and the actual bytecode deployed onchain.
+            Audits produce static PDF reports with zero cryptographic link between the audited code and deployed EVM bytecode.
           </p>
         </div>
 
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-2">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs text-signal-high font-bold">PROBLEM 04</span>
-            <DollarSign className="h-4 w-4 text-signal-high" />
+            <ShieldAlert className="h-4 w-4 text-signal-high" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Exorbitant Pricing</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Zero Automated Exploit Proving</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            High costs push many emerging teams to skip audits entirely or under-invest in security reviews.
+            Existing tools predict vulnerabilities instead of executing attacks in an EVM sandbox to prove whether an exploit is actually viable.
           </p>
         </div>
       </div>
@@ -960,8 +960,8 @@ function SlideProblem() {
           <AlertTriangle className="h-4 w-4" />
         </div>
         <div className="font-mono text-xs">
-          <span className="text-signal-critical font-bold">Result: </span>
-          <span className="text-text-primary font-sans">Even audited protocols still get exploited due to outdated PDFs and unverifiable deployments.</span>
+          <span className="text-signal-critical font-bold">Industry Gap: </span>
+          <span className="text-text-primary font-sans">Speculative bug prediction fails Web3. Protocols need deterministic EVM attack proofs before deployment.</span>
         </div>
       </div>
     </div>
@@ -974,8 +974,8 @@ function SlideSolution() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
         badge="Slide 3 – Solution"
-        title="Continuous, Verifiable Protocol Security"
-        description="Zyron combines three specialized layers to modernize Web3 smart contract security:"
+        title="Zyron Dual-Engine AI Architecture"
+        description="Zyron replaces speculative bug finding with automated mathematical & dynamic proof across three integrated layers:"
       />
 
       {/* 3 Solution Layers */}
@@ -985,20 +985,20 @@ function SlideSolution() {
             <span className="font-mono text-xs font-bold text-accent-scan">LAYER 01</span>
             <Code2 className="h-4 w-4 text-accent-scan" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Automated AST Analysis</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">AST Invariant Reasoning</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Fast, deterministic static analysis using Abstract Syntax Trees and Control Flow Graphs to surface candidates instantly.
+            Parses raw Solidity into Abstract Syntax Trees and evaluates protocol-specific invariants (collateral solvency, share dilution, oracle bounds).
           </p>
         </div>
 
         <div className="p-4.5 rounded bg-bg-panel border border-border-hairline space-y-3 hover:border-accent-scan/50 transition-colors">
           <div className="flex items-center justify-between">
             <span className="font-mono text-xs font-bold text-accent-scan">LAYER 02</span>
-            <Users className="h-4 w-4 text-accent-scan" />
+            <Cpu className="h-4 w-4 text-accent-scan" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Structured Human Review</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Red-Team Exploit Prover</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Professional auditors review findings in a dual-pane workbench to calibrate severity and verify exploit logic.
+            <code className="text-accent-scan">zyron-agent</code> microservice forks EVM mainnet state via Anvil, synthesizes multi-step attacks, and generates Foundry <code className="text-accent-scan">.t.sol</code> PoCs.
           </p>
         </div>
 
@@ -1007,9 +1007,9 @@ function SlideSolution() {
             <span className="font-mono text-xs font-bold text-accent-scan">LAYER 03</span>
             <FileCheck2 className="h-4 w-4 text-accent-scan" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">On-Chain Attestations</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Trace Stepper & Proofs</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Immutable certificates containing compiled bytecode hash and findings Merkle root published onchain.
+            Emits interactive opcode transaction traces for senior auditors to verify in real time, anchoring SHA-256 bytecode attestations onchain.
           </p>
         </div>
       </div>
@@ -1017,7 +1017,7 @@ function SlideSolution() {
       {/* Bottom Summary Banner */}
       <div className="p-3.5 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-3 font-mono text-xs">
         <span className="text-text-muted">Core Value Proposition:</span>
-        <span className="text-accent-scan font-bold">Security reviews that can actually be verified onchain.</span>
+        <span className="text-accent-scan font-bold">Automated EVM attack proofs with zero false positives.</span>
       </div>
     </div>
   );
@@ -1028,28 +1028,27 @@ function SlideTechnology() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
-        badge="Slide 4 – Technology"
-        title="14-Pass AST & Control-Flow Analysis Engine"
-        description="Our engine parses Solidity into AST, builds Control Flow Graphs, and runs specialized security passes including:"
+        badge="Slide 4 – AI Layer 1"
+        title="AST & Invariant Semantic Engine"
+        description="Deterministic code modeling parsing Solidity into AST and evaluating protocol-specific invariants:"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Pass List */}
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-3">
           <div className="font-mono text-xs font-bold text-accent-scan flex items-center justify-between border-b border-border-hairline pb-2">
-            <span>AUTOMATED SECURITY PASSES</span>
-            <span>14 PASSES TOTAL</span>
+            <span>PROTOCOL INVARIANT PASSES</span>
+            <span>FORMAL VERIFICATION</span>
           </div>
           <div className="grid grid-cols-1 gap-1.5 font-mono text-xs text-text-primary">
             {[
-              "1. Access Control & Authorization",
-              "2. Reentrancy & State Ordering",
-              "3. Oracle & Price Manipulation",
-              "4. Proxy & Storage Safety",
-              "5. Token Standards Compliance",
-              "6. Assembly / Yul Risks",
-              "7. Centralization Vectors",
-              "8. And more specialized passes...",
+              "1. Collateral Solvency & Share Dilution",
+              "2. Non-Reentrant State Ordering",
+              "3. Price Oracle Staleness & Twap Bounds",
+              "4. Proxy Storage Collision & Upgrade Safety",
+              "5. Flash Loan Liquidation Boundaries",
+              "6. Yul Assembly & Low-Level Call Risks",
+              "7. Cross-File Inheritance Triage",
             ].map((pass, idx) => (
               <div key={idx} className="p-2 rounded bg-bg-panel-raised border border-border-hairline flex items-center justify-between">
                 <span>{pass}</span>
@@ -1063,24 +1062,24 @@ function SlideTechnology() {
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-3 font-mono text-xs">
           <div className="flex items-center justify-between text-[11px] text-text-muted border-b border-border-hairline pb-2">
             <span className="flex items-center gap-1.5 text-accent-scan">
-              <Terminal className="h-3.5 w-3.5" /> AST_PARSER_OUTPUT
+              <Terminal className="h-3.5 w-3.5" /> AST_INVARIANT_ENGINE
             </span>
-            <span className="text-signal-resolved">READY</span>
+            <span className="text-signal-resolved font-bold">DETERMINISTIC</span>
           </div>
 
           <div className="space-y-2 text-[11px] leading-relaxed text-text-muted">
             <p className="text-text-primary">&gt; parsing Solidity AST nodes...</p>
-            <p className="text-accent-scan">&gt; constructing CFG graph for 24 functions...</p>
+            <p className="text-accent-scan">&gt; evaluating protocol invariants across 32 state variables...</p>
             <div className="p-2.5 rounded bg-bg-void border border-border-hairline space-y-1">
-              <div className="text-signal-high font-bold">⚠ PASS 2: REENTRANCY CHECK</div>
-              <div className="text-[10px] text-text-primary">Line 142: State variable mutated after external call</div>
-              <div className="text-[10px] text-text-muted">Target: withdraw(uint256 amount)</div>
+              <div className="text-signal-high font-bold">⚠ INVARIANT BREACH CANDIDATE</div>
+              <div className="text-[10px] text-text-primary">Line 142: Share minting fee precision mismatch</div>
+              <div className="text-[10px] text-text-muted">Target: depositCollateral(uint256 amount)</div>
             </div>
-            <p className="text-signal-resolved">&gt; AST Analysis Complete: 14/14 Passes executed</p>
+            <p className="text-signal-resolved">&gt; AST Analysis Complete: Passed candidate to zyron-agent for EVM sandbox proof.</p>
           </div>
 
           <div className="pt-2 border-t border-border-hairline text-[11px] text-text-muted font-sans">
-            Designed to catch high-signal issues before human reviewers begin.
+            Reasons against mathematical protocol invariants rather than guessing syntax errors.
           </div>
         </div>
       </div>
@@ -1088,14 +1087,14 @@ function SlideTechnology() {
   );
 }
 
-// --- SLIDE 5: HUMAN REVIEW ---
+// --- SLIDE 5: HUMAN REVIEW (AI LAYER 2) ---
 function SlideHumanReview() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
-        badge="Slide 5 – Human Review"
-        title="Dual-Pane Auditor Workbench"
-        description="Automated tools surface candidates. Human experts make the final judgment."
+        badge="Slide 5 – AI Layer 2"
+        title="Autonomous Red-Team Prover (zyron-agent)"
+        description="Ephemeral virtual EVM state forking via Anvil microservice to synthesize real attacks and eliminate false positives:"
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1103,9 +1102,9 @@ function SlideHumanReview() {
           <div className="h-7 w-7 rounded bg-bg-panel-raised text-accent-scan flex items-center justify-center border border-border-hairline font-mono text-xs font-bold">
             01
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Side-by-Side Code & Findings</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Ephemeral Virtual EVM Forking</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Dual-pane workspace pairing raw Solidity source code alongside automated static analysis candidates for rapid verification.
+            Spins up an instantaneous local EVM execution sandbox (via Anvil) matching live mainnet state and protocol storage.
           </p>
         </div>
 
@@ -1113,9 +1112,9 @@ function SlideHumanReview() {
           <div className="h-7 w-7 rounded bg-bg-panel-raised text-accent-scan flex items-center justify-center border border-border-hairline font-mono text-xs font-bold">
             02
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Inline Comments & Severity Calibration</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Active Attack Synthesis</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Auditors annotate specific lines and calibrate severity scores (Critical, High, Medium, Low) based on exploit impact.
+            The AI acts as an autonomous adversary: generating attacker contracts, calculating flash loan capital, and executing multi-step exploits.
           </p>
         </div>
 
@@ -1123,9 +1122,9 @@ function SlideHumanReview() {
           <div className="h-7 w-7 rounded bg-bg-panel-raised text-accent-scan flex items-center justify-center border border-border-hairline font-mono text-xs font-bold">
             03
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Clear Remediation Tracking</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Executable Foundry PoCs (.t.sol)</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Structured workflow tracking findings from initial discovery through client fix submission and final resolution.
+            If an invariant breaks, <code className="text-accent-scan">zyron-agent</code> generates a reproducible Foundry test suite to mathematically prove the vulnerability.
           </p>
         </div>
 
@@ -1133,53 +1132,53 @@ function SlideHumanReview() {
           <div className="h-7 w-7 rounded bg-bg-panel-raised text-accent-scan flex items-center justify-center border border-border-hairline font-mono text-xs font-bold">
             04
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Support for Multi-File Projects</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Zero False-Positive Guarantee</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Seamless navigation across complex protocol architectures, inheritance graphs, and multi-contract codebases.
+            Unverified bugs that hold invariant state during sandbox execution are automatically filtered out before senior auditor triage.
           </p>
         </div>
       </div>
 
       <div className="p-3.5 rounded bg-bg-panel border border-border-hairline font-mono text-xs text-text-muted flex items-center justify-between">
-        <span>Workbench Objective:</span>
-        <span className="text-accent-scan font-bold">Higher signal and lower noise than pure automated scanners.</span>
+        <span>zyron-agent Guarantee:</span>
+        <span className="text-accent-scan font-bold">Every reported issue includes an executable Foundry PoC.</span>
       </div>
     </div>
   );
 }
 
-// --- SLIDE 6: ON-CHAIN ATTESTATION ---
+// --- SLIDE 6: ON-CHAIN ATTESTATION (AI LAYER 3) ---
 function SlideAttestation() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
-        badge="Slide 6 – On-Chain Attestation"
-        title="Verifiable Certificates, Not Just PDFs"
-        description="Every completed audit can produce an on-chain attestation anchoring cryptographic proofs to public registries."
+        badge="Slide 6 – AI Layer 3 & Attestation"
+        title="Dual-Pane Workbench & EVM Trace Replay"
+        description="Interactive transaction trace stepper emitting opcodes, gas consumption, and storage slot mutations for auditors:"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Included Proofs */}
         <div className="p-4 rounded bg-bg-panel border border-border-hairline space-y-3">
           <div className="font-mono text-xs font-bold text-accent-scan border-b border-border-hairline pb-2">
-            ATTESTATION INCLUSIONS
+            INTERACTIVE TRACE & PROOF FEATURES
           </div>
           <div className="space-y-2 font-mono text-xs">
             <div className="p-2.5 rounded bg-bg-panel-raised border border-border-hairline space-y-1">
-              <div className="text-text-primary font-bold">1. SHA-256 Bytecode & Source Hash</div>
-              <div className="text-[10px] text-text-muted">Direct cryptographic link to exact compiled bytecode</div>
+              <div className="text-text-primary font-bold">1. Interactive Opcode Trace Stepper</div>
+              <div className="text-[10px] text-text-muted">Inspect storage slot mutations, gas usage, and balance drains step-by-step</div>
             </div>
             <div className="p-2.5 rounded bg-bg-panel-raised border border-border-hairline space-y-1">
-              <div className="text-text-primary font-bold">2. Merkle Root of Findings</div>
-              <div className="text-[10px] text-text-muted">Verifiable proof of all identified and resolved findings</div>
+              <div className="text-text-primary font-bold">2. 90% Auditor Augmentation</div>
+              <div className="text-[10px] text-text-muted">AI does heavy verification upfront, reducing audit turnaround from weeks to days</div>
             </div>
             <div className="p-2.5 rounded bg-bg-panel-raised border border-border-hairline space-y-1">
-              <div className="text-text-primary font-bold">3. EIP-712 Auditor Signatures</div>
-              <div className="text-[10px] text-text-muted">Cryptographic signature from certified human reviewers</div>
+              <div className="text-text-primary font-bold">3. SHA-256 Bytecode & Merkle Proofs</div>
+              <div className="text-[10px] text-text-muted">Direct cryptographic link to exact compiled bytecode and finding roots</div>
             </div>
             <div className="p-2.5 rounded bg-bg-panel-raised border border-border-hairline space-y-1">
-              <div className="text-text-primary font-bold">4. Timestamp & Engagement Reference</div>
-              <div className="text-[10px] text-text-muted">Immutable block timestamp and audit scope record</div>
+              <div className="text-text-primary font-bold">4. EIP-712 Auditor Signatures</div>
+              <div className="text-[10px] text-text-muted">Cryptographic signatures published directly to public EVM attestations (EAS)</div>
             </div>
           </div>
         </div>
@@ -1205,13 +1204,13 @@ function SlideAttestation() {
               <div className="text-text-primary">0xAuditor712...93A2 (Verified)</div>
             </div>
             <div>
-              <div className="text-text-muted">Chain Network:</div>
-              <div className="text-text-primary">Arbitrum Sepolia / Mainnet</div>
+              <div className="text-text-muted">Foundry PoC Suite:</div>
+              <div className="text-signal-resolved font-bold">VaultSolvency.t.sol (0 False Positives)</div>
             </div>
           </div>
 
           <div className="pt-2 border-t border-border-hairline text-[11px] text-text-muted font-sans">
-            Anyone can independently verify that a specific version of the code was reviewed.
+            Protocol founders and auditors can independently verify and replay transaction traces onchain.
           </div>
         </div>
       </div>
@@ -1225,18 +1224,18 @@ function SlideHowItWorks() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
         badge="Slide 7 – How It Works"
-        title="Simple Audit Lifecycle"
-        description="Transparent process from start to finish across 5 structured stages:"
+        title="5-Stage AI Audit Lifecycle"
+        description="Transparent process from code submission and EVM sandbox attack proving to on-chain attestation:"
       />
 
       {/* 5 Stages Sequence */}
       <div className="space-y-2.5 font-mono text-xs">
         {[
-          { step: "STAGE 01", title: "Client Submission", desc: "Client submits smart contract source code files or GitHub repository." },
-          { step: "STAGE 02", title: "Automated AST Scanning", desc: "Automated AST scanning runs 14 static passes and constructs Control Flow Graphs." },
-          { step: "STAGE 03", title: "Auditor Review", desc: "Findings are reviewed and validated by expert auditors in the dual-pane workbench." },
-          { step: "STAGE 04", title: "Triage & Remediation", desc: "Issues are triaged, client applies fixes, and auditors verify remediation PRs." },
-          { step: "STAGE 05", title: "On-Chain Attestation", desc: "Final attestation certificate is generated and published onchain." },
+          { step: "STAGE 01", title: "Scope & Invariant Setup", desc: "Client submits smart contract source code and specifies protocol solvency invariants." },
+          { step: "STAGE 02", title: "AST Invariant Analysis", desc: "Automated AST static engine parses opcode flow graphs and evaluates invariant rules." },
+          { step: "STAGE 03", title: "Red-Team EVM Sandbox", desc: "zyron-agent forks mainnet state via Anvil, synthesizes attacks, and emits Foundry .t.sol PoCs." },
+          { step: "STAGE 04", title: "Trace Replay Auditor Triage", desc: "Senior auditors inspect opcode trace steppers, write remediation guidance, and verify fixes." },
+          { step: "STAGE 05", title: "On-Chain Attestation", desc: "Final cryptographic certificate with bytecode hash and Merkle root published onchain." },
         ].map((item, idx) => (
           <div key={idx} className="p-3.5 rounded bg-bg-panel border border-border-hairline flex flex-col sm:flex-row sm:items-center justify-between gap-2 hover:border-accent-scan/50 transition-colors">
             <div className="flex items-center gap-3">
@@ -1252,7 +1251,7 @@ function SlideHowItWorks() {
 
       <div className="p-3.5 rounded bg-bg-panel border border-border-hairline font-mono text-xs text-text-muted flex items-center justify-between">
         <span>Lifecycle Guarantee:</span>
-        <span className="text-accent-scan font-bold">Transparent process from start to finish.</span>
+        <span className="text-accent-scan font-bold">Automated mathematical proof with senior auditor sign-off.</span>
       </div>
     </div>
   );
@@ -1264,8 +1263,8 @@ function SlideMarket() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
         badge="Slide 8 – Market Opportunity"
-        title="Growing Demand for Better Security Infrastructure"
-        description="Positioned at the intersection of security tooling and on-chain trust."
+        title="Surging Demand for AI Security Infrastructure"
+        description="Positioned at the intersection of automated AI execution, security tooling, and on-chain trust."
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -1276,7 +1275,7 @@ function SlideMarket() {
           </div>
           <h3 className="font-mono text-sm font-bold text-text-primary">L2 Contract Explosion</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Increasing number of smart contracts deployed daily across Layer-2 rollups and appchains requiring fast security validation.
+            Thousands of smart contracts deployed daily across Layer-2 rollups (Arbitrum, Base, Optimism) requiring rapid EVM security validation.
           </p>
         </div>
 
@@ -1285,9 +1284,9 @@ function SlideMarket() {
             <span className="font-bold">DRIVER 02</span>
             <Building2 className="h-4 w-4" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Institutional & RWA Demand</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Institutional & RWA Protocols</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Institutional and Real-World Asset (RWA) protocols demanding higher assurance and cryptographic audit proofs before deploying capital.
+            Institutional players and Real-World Asset (RWA) protocols demanding mathematical EVM proofs before committing capital.
           </p>
         </div>
 
@@ -1296,9 +1295,9 @@ function SlideMarket() {
             <span className="font-bold">DRIVER 03</span>
             <TrendingUp className="h-4 w-4" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Shift to Continuous Security</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Shift from Linters to Exploit Provers</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Industry paradigm shift moving from one-time static audits toward continuous scanning and active security monitoring.
+            Industry paradigm shift moving from noisy static linters toward dynamic EVM attack simulation and verifiable PoC suites.
           </p>
         </div>
 
@@ -1307,16 +1306,16 @@ function SlideMarket() {
             <span className="font-bold">DRIVER 04</span>
             <FileCheck2 className="h-4 w-4" />
           </div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Need for Verifiable Work</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Verifiable On-Chain Security</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Strong market need for verifiable, cryptographic security work rather than claimable marketing PDF documents.
+            Strong market demand for on-chain verifiable security certificates directly linking bytecode hashes to audit proofs.
           </p>
         </div>
       </div>
 
       <div className="p-3.5 rounded bg-bg-panel border border-border-hairline font-mono text-xs text-text-muted flex items-center justify-between">
         <span>Strategic Position:</span>
-        <span className="text-accent-scan font-bold">Zyron sits at the intersection of security tooling and on-chain trust.</span>
+        <span className="text-accent-scan font-bold">Zyron sits at the intersection of AI execution and on-chain trust.</span>
       </div>
     </div>
   );
@@ -1328,16 +1327,16 @@ function SlideBusinessModel() {
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
         badge="Slide 9 – Business Model"
-        title="Hybrid Revenue Model"
+        title="High-Margin Hybrid Revenue Model"
         description="Clear path from project-based revenue to recurring protocol security revenue:"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
         <div className="p-4.5 rounded bg-bg-panel border border-border-hairline space-y-3">
           <div className="font-mono text-xs text-accent-scan font-bold">STREAM 01</div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Audit Engagements</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Full AI Audits</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Fixed-price security reviews with full AST scanning, dual-auditor review, and on-chain bytecode attestation.
+            Fixed-price security engagements with full AST scanning, <code className="text-accent-scan">zyron-agent</code> EVM sandbox PoCs, and on-chain attestation.
           </p>
           <div className="pt-2 border-t border-border-hairline font-mono text-[11px] text-text-primary">
             Fixed-Price Engagements
@@ -1346,9 +1345,9 @@ function SlideBusinessModel() {
 
         <div className="p-4.5 rounded bg-bg-panel border border-accent-scan/50 space-y-3">
           <div className="font-mono text-xs text-accent-scan font-bold">STREAM 02</div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Continuous Plans</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Continuous PR Scanning</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Ongoing static scanning, continuous CI/CD integration, plus priority review for active protocol updates.
+            Ongoing CI/CD pull-request scanning, automated invariant checks, plus priority EVM sandbox triage for active protocol updates.
           </p>
           <div className="pt-2 border-t border-border-hairline font-mono text-[11px] text-accent-scan font-bold">
             Recurring Subscription ARR
@@ -1357,9 +1356,9 @@ function SlideBusinessModel() {
 
         <div className="p-4.5 rounded bg-bg-panel border border-border-hairline space-y-3">
           <div className="font-mono text-xs text-text-muted font-bold">STREAM 03 (FUTURE)</div>
-          <h3 className="font-mono text-sm font-bold text-text-primary">Enterprise Features</h3>
+          <h3 className="font-mono text-sm font-bold text-text-primary">Enterprise Telemetry</h3>
           <p className="text-xs text-text-muted leading-relaxed font-sans">
-            Premium verification, continuous active monitoring, insurance risk telemetry, and enterprise API access.
+            Continuous active monitoring, insurance risk telemetry, custom invariant suite development, and enterprise API access.
           </p>
           <div className="pt-2 border-t border-border-hairline font-mono text-[11px] text-text-muted">
             Enterprise Expansion
@@ -1369,7 +1368,7 @@ function SlideBusinessModel() {
 
       <div className="p-3.5 rounded bg-bg-panel border border-border-hairline font-mono text-xs text-text-muted flex items-center justify-between">
         <span>Revenue Trajectory:</span>
-        <span className="text-accent-scan font-bold">Clear path from project-based revenue to recurring revenue.</span>
+        <span className="text-accent-scan font-bold">Transitioning audit services into recurring SaaS subscriptions.</span>
       </div>
     </div>
   );
@@ -1380,9 +1379,9 @@ function SlideCompetition() {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       <SlideHeader
-        badge="Slide 10 – Competitive Position"
-        title="Why Zyron Outperforms Alternatives"
-        description="Side-by-side comparison of smart contract security approaches across key criteria:"
+        badge="Slide 10 – Competitive Advantage"
+        title="Why Zyron Outperforms Linters & Legacy Firms"
+        description="Side-by-side comparison of smart contract security approaches across key technical criteria:"
       />
 
       <div className="rounded border border-border-hairline overflow-hidden bg-bg-panel font-mono text-xs">
@@ -1390,47 +1389,47 @@ function SlideCompetition() {
           <thead className="bg-bg-panel-raised text-text-primary font-bold border-b border-border-hairline">
             <tr>
               <th className="py-3 px-4">Feature</th>
-              <th className="py-3 px-4 text-text-muted">Traditional Firms</th>
-              <th className="py-3 px-4 text-text-muted">Pure Scanners</th>
-              <th className="py-3 px-4 text-accent-scan font-bold">Zyron</th>
+              <th className="py-3 px-4 text-text-muted">Generic Linters</th>
+              <th className="py-3 px-4 text-text-muted">Legacy Firms</th>
+              <th className="py-3 px-4 text-accent-scan font-bold">Zyron Dual-Engine AI</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border-hairline text-text-primary text-[11px]">
             <tr>
-              <td className="py-2.5 px-4 font-bold">Depth of Analysis</td>
-              <td className="py-2.5 px-4 text-text-muted">High</td>
-              <td className="py-2.5 px-4 text-text-muted">Medium</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">High (AST + Human)</td>
+              <td className="py-2.5 px-4 font-bold">EVM Execution Sandbox</td>
+              <td className="py-2.5 px-4 text-signal-critical">No (Static Only)</td>
+              <td className="py-2.5 px-4 text-signal-high">Manual / Slow</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">Instant Anvil Fork</td>
             </tr>
             <tr>
-              <td className="py-2.5 px-4 font-bold">Speed</td>
-              <td className="py-2.5 px-4 text-signal-critical">Slow</td>
-              <td className="py-2.5 px-4 text-signal-resolved">Very Fast</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">Fast</td>
+              <td className="py-2.5 px-4 font-bold">False Positive Rate</td>
+              <td className="py-2.5 px-4 text-signal-critical">80%+ Noise</td>
+              <td className="py-2.5 px-4 text-signal-resolved">Low (Manual)</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">0% (Proven PoCs)</td>
             </tr>
             <tr>
-              <td className="py-2.5 px-4 font-bold">Human Expertise</td>
-              <td className="py-2.5 px-4 text-signal-resolved">Yes</td>
+              <td className="py-2.5 px-4 font-bold">Automated Attack Proving</td>
               <td className="py-2.5 px-4 text-signal-critical">No</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">Yes</td>
+              <td className="py-2.5 px-4 text-signal-critical">No</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">Foundry .t.sol PoCs</td>
             </tr>
             <tr>
-              <td className="py-2.5 px-4 font-bold">On-Chain Attestation</td>
+              <td className="py-2.5 px-4 font-bold">Interactive Trace Replay</td>
               <td className="py-2.5 px-4 text-signal-critical">No</td>
               <td className="py-2.5 px-4 text-signal-critical">No</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">Yes</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">Step-by-Step Opcodes</td>
             </tr>
             <tr>
-              <td className="py-2.5 px-4 font-bold">Verifiable Bytecode Link</td>
-              <td className="py-2.5 px-4 text-signal-critical">No</td>
-              <td className="py-2.5 px-4 text-signal-critical">No</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">Yes</td>
+              <td className="py-2.5 px-4 font-bold">Delivery Turnaround</td>
+              <td className="py-2.5 px-4 text-signal-resolved">Seconds (No Proof)</td>
+              <td className="py-2.5 px-4 text-signal-critical">4–8 Weeks</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">Days / Real-time</td>
             </tr>
             <tr>
-              <td className="py-2.5 px-4 font-bold">Continuous Use</td>
-              <td className="py-2.5 px-4 text-signal-high">Limited</td>
-              <td className="py-2.5 px-4 text-signal-resolved">Yes</td>
-              <td className="py-2.5 px-4 text-accent-scan font-bold">Yes</td>
+              <td className="py-2.5 px-4 font-bold">On-Chain Bytecode Attestation</td>
+              <td className="py-2.5 px-4 text-signal-critical">No</td>
+              <td className="py-2.5 px-4 text-signal-critical">No (PDF Only)</td>
+              <td className="py-2.5 px-4 text-accent-scan font-bold">EAS On-Chain Certs</td>
             </tr>
           </tbody>
         </table>
