@@ -48,7 +48,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// --- PITCH DECK SLIDE DEFINITIONS WITH VOICEOVER SCRIPT ---
+// --- PITCH DECK SLIDE DEFINITIONS WITH CONVERSATIONAL INVESTOR PRESENTATION SCRIPT ---
 interface SlideData {
   id: string;
   badge: string;
@@ -65,7 +65,8 @@ const SLIDES_META: SlideData[] = [
     title: "ZYRON PROTOCOL SECURITY",
     subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
     category: "Vision",
-    script: "Welcome to the Zyron Protocol Security pitch deck. Zyron provides the cryptographic security infrastructure for Web3 protocols, replacing slow, opaque PDF audits with automated 14-pass AST static analysis, structured human review, and immutable on-chain attestations.",
+    script:
+      "Good day, everyone! Welcome to the pitch presentation for Zyron. I am super excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zyron, we are changing that by combining automated 14-pass AST static analysis, double-blind human auditor review, and immutable on-chain attestations.",
   },
   {
     id: "problem",
@@ -73,7 +74,8 @@ const SLIDES_META: SlideData[] = [
     title: "The Web3 Security Bottleneck",
     subtitle: "Smart contracts secure tens of billions in value, yet audits remain slow, expensive, and unverifiable.",
     category: "Market",
-    script: "Smart contracts secure tens of billions of dollars in value, yet the audit process remains a critical bottleneck. Top audit firms operate with 6 to 10 week wait times, deliver static PDF reports that become outdated instantly, lack cryptographic bytecode linkage, and charge exorbitant fees.",
+    script:
+      "Now, let us talk about the problem. Smart contracts currently secure over one hundred billion dollars in total value locked, yet the security review process is a massive bottleneck. Protocol teams spend six to ten weeks waiting for top audit firms to start. And what do they get at the end? A static PDF report that becomes completely obsolete the moment they tweak a line of code! Furthermore, there is zero cryptographic link between what was audited in that PDF and what actually gets deployed onchain. This is why even audited protocols keep getting exploited.",
   },
   {
     id: "solution",
@@ -81,7 +83,8 @@ const SLIDES_META: SlideData[] = [
     title: "Continuous, Verifiable Protocol Security",
     subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
     category: "Product",
-    script: "Zyron solves this bottleneck with continuous, verifiable security. We combine automated Abstract Syntax Tree analysis for sub-minute detection, structured dual-pane human review for expert judgment, and immutable on-chain attestations that can actually be verified.",
+    script:
+      "So, how do we solve this? Zyron introduces continuous, verifiable protocol security built on three core layers. First, automated AST analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
   },
   {
     id: "technology",
@@ -89,7 +92,8 @@ const SLIDES_META: SlideData[] = [
     title: "14-Pass AST & Control-Flow Analysis Engine",
     subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
     category: "Product",
-    script: "Our engine parses Solidity into AST nodes and constructs Control Flow Graphs. It executes 14 specialized security passes—covering access control, reentrancy, oracle manipulation, proxy storage safety, token standards, assembly risks, and centralization vectors.",
+    script:
+      "Let us dive deeper into our underlying technology engine. When code is submitted to Zyron, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
   },
   {
     id: "human-review",
@@ -97,7 +101,8 @@ const SLIDES_META: SlideData[] = [
     title: "Dual-Pane Auditor Workbench",
     subtitle: "Automated tools surface candidates. Human experts make the final judgment.",
     category: "Product",
-    script: "Automated tools surface candidate vulnerabilities while expert human auditors make the final judgment. Our workbench features side-by-side code inspection, inline comments, severity calibration, remediation tracking, and multi-file project support.",
+    script:
+      "Automated scanners are great, but tools alone cannot catch complex economic exploits. That is where our Dual-Pane Auditor Workbench comes in. Certified human auditors inspect code side-by-side with automated findings. They calibrate severity levels, write inline remediation guidance, track fixes in real time, and support multi-file projects. This dual approach gives us higher signal and significantly lower noise than any pure automated scanner.",
   },
   {
     id: "attestation",
@@ -105,7 +110,8 @@ const SLIDES_META: SlideData[] = [
     title: "Verifiable Certificates, Not Just PDFs",
     subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
     category: "Product",
-    script: "Every completed audit produces an on-chain attestation. This includes the SHA-256 bytecode hash, Merkle root of findings, EIP-712 auditor signatures, and engagement timestamps anchored directly to public EVM registries.",
+    script:
+      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zyron generates an on-chain attestation anchoring the SHA-256 hash of the exact compiled bytecode, the Merkle root of all findings, EIP-712 auditor signatures, and engagement timestamps onto public EVM registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
   },
   {
     id: "how-it-works",
@@ -113,7 +119,8 @@ const SLIDES_META: SlideData[] = [
     title: "Simple Audit Lifecycle",
     subtitle: "Transparent audit process from client code submission to on-chain attestation.",
     category: "Product",
-    script: "Our audit lifecycle is simple and transparent. The client submits contracts, automated AST scanning runs instantly, auditors review findings in the workbench, issues are triaged and remediated, and the final attestation is published onchain.",
+    script:
+      "Let me walk you through our simple five-stage audit lifecycle. Stage one: the client submits their smart contract repository. Stage two: our automated AST engine executes 14 security passes. Stage three: expert auditors review and validate findings in the dual-pane workbench. Stage four: issues are triaged, client applies fixes, and patches are verified. And stage five: the final cryptographic attestation is generated and published onchain. It is transparent from start to finish.",
   },
   {
     id: "market",
@@ -121,7 +128,8 @@ const SLIDES_META: SlideData[] = [
     title: "Growing Demand for Better Security Infrastructure",
     subtitle: "Sitting at the intersection of security tooling and on-chain trust.",
     category: "Market",
-    script: "Demand for verifiable security is growing rapidly. Driven by daily contract deployments across Layer-2 rollups, institutional real-world asset onboarding, a shift toward continuous security, and a strong need for verifiable proof over marketing PDFs.",
+    script:
+      "Looking at the market, the demand for verifiable security infrastructure is booming. Thousands of smart contracts are deployed daily across Layer-2 rollups like Arbitrum, Base, and Optimism. Institutional players and real-world asset protocols are demanding higher cryptographic assurance before committing capital. The Web3 market is shifting away from one-off compliance checks toward continuous, verifiable security.",
   },
   {
     id: "business-model",
@@ -129,7 +137,8 @@ const SLIDES_META: SlideData[] = [
     title: "Hybrid Revenue Model",
     subtitle: "Fixed-price audit engagements, continuous scanning plans, and enterprise verification.",
     category: "Business",
-    script: "Zyron operates a hybrid revenue model. We combine fixed-price security review engagements with continuous scanning subscriptions for active protocols, building a clear path from project-based revenue to recurring ARR.",
+    script:
+      "Our business model combines immediate high-margin revenue with long-term subscription growth. We charge fixed-price engagement fees for full security reviews with on-chain attestations. Alongside this, we offer continuous security plans for ongoing pull-request scanning and priority auditor triage, creating a clear pathway from project-based fees to recurring annual revenue.",
   },
   {
     id: "competition",
@@ -137,7 +146,8 @@ const SLIDES_META: SlideData[] = [
     title: "Why Zyron Outperforms Legacy & Pure Scanners",
     subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
     category: "Business",
-    script: "Compared to traditional audit firms and pure static scanners, Zyron delivers high depth of analysis with fast turnaround times, certified human expertise, continuous protection, and verifiable bytecode links.",
+    script:
+      "When you compare Zyron to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zyron delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
   },
   {
     id: "roadmap",
@@ -145,7 +155,8 @@ const SLIDES_META: SlideData[] = [
     title: "Current Status & Multi-Phase Roadmap",
     subtitle: "From core AST engine and Arbitrum Sepolia attestations to ERC-8004 auditor identity.",
     category: "Traction",
-    script: "Today, our core AST engine, auditor workbench, and Arbitrum attestation system are live. Near-term focus expands multi-file support and reporting, leading to ERC-8004 auditor identity and continuous monitoring.",
+    script:
+      "Where are we today? Our core AST engine, auditor workbench, and Arbitrum Sepolia attestation registry are fully live and operational. In the near term, we are expanding multi-file inheritance analysis, false positive reduction, and client dashboards. Moving forward, we are building decentralized auditor identity on ERC-8004, multi-chain support, and continuous active monitoring.",
   },
   {
     id: "vision",
@@ -153,7 +164,8 @@ const SLIDES_META: SlideData[] = [
     title: "Building the Trust Layer for Smart Contract Security",
     subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
     category: "Vision",
-    script: "Zyron exists to build the trust layer for smart contract security. We are currently onboarding design partner protocols, security researchers, and strategic supporters to make security work that can actually be trusted onchain.",
+    script:
+      "To wrap up, Zyron exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
   },
 ];
 
@@ -170,7 +182,7 @@ export default function PitchDeckPage() {
 
   const totalSlides = SLIDES_META.length;
 
-  // Initialize SpeechSynthesis voice selection
+  // Initialize SpeechSynthesis voice selection prioritizing African/Nigerian & expressive voices
   React.useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
@@ -180,11 +192,18 @@ export default function PitchDeckPage() {
         const preferredVoice =
           voices.find(
             (v) =>
+              v.lang.toLowerCase().includes("ng") ||
+              v.name.toLowerCase().includes("nigeria") ||
+              v.name.toLowerCase().includes("africa")
+          ) ||
+          voices.find((v) => v.lang.startsWith("en-ZA") || v.lang.startsWith("en-GH") || v.lang.startsWith("en-KE")) ||
+          voices.find(
+            (v) =>
+              v.name.includes("Google") ||
+              v.name.includes("Natural") ||
               v.name.includes("Samantha") ||
-              v.name.includes("Karen") ||
               v.name.includes("Daniel") ||
-              v.name.includes("Google US English") ||
-              v.name.includes("Natural")
+              v.name.includes("Karen")
           ) ||
           voices.find((v) => v.lang.startsWith("en-US") || v.lang.startsWith("en-GB")) ||
           voices.find((v) => v.lang.startsWith("en")) ||
@@ -199,7 +218,7 @@ export default function PitchDeckPage() {
     }
   }, []);
 
-  // Function to handle speaking current slide narration script
+  // Function to handle speaking current slide presentation script
   const speakCurrentSlide = React.useCallback(
     (slideIndex: number, autoAdvance: boolean) => {
       if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
@@ -217,7 +236,7 @@ export default function PitchDeckPage() {
 
       const utterance = new SpeechSynthesisUtterance(slide.script);
       utterance.rate = 1.0;
-      utterance.pitch = 1.0;
+      utterance.pitch = 1.05; // Slightly expressive tone for live presentation
 
       if (selectedVoiceRef.current) {
         utterance.voice = selectedVoiceRef.current;
@@ -359,7 +378,7 @@ export default function PitchDeckPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-mono font-bold text-xs tracking-wider text-text-primary flex items-center gap-2">
-                ZYRON <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-bg-panel-raised text-accent-scan border border-border-hairline">VOICEOVER DECK</span>
+                ZYRON <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-bg-panel-raised text-accent-scan border border-border-hairline">FOUNDER PITCH DECK</span>
               </span>
               <span className="text-[10px] text-text-muted font-mono hidden sm:inline">Cryptographic Protocol Security</span>
             </div>
@@ -411,7 +430,7 @@ export default function PitchDeckPage() {
                 ? "bg-bg-panel-raised border-signal-resolved text-signal-resolved"
                 : "bg-accent-scan text-bg-void border-accent-scan hover:bg-accent-scan/90"
             )}
-            title="Auto-Present Deck with Audio Voiceover"
+            title="Auto-Present Deck with Investor Audio Presentation"
           >
             {isAutoPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-bg-void" />}
             <span>{isAutoPlaying ? "Pause Presentation" : "Play Presentation"}</span>
@@ -460,7 +479,7 @@ export default function PitchDeckPage() {
         <div className="mt-3 max-w-5xl w-full mx-auto p-2.5 rounded bg-bg-panel border border-accent-scan/40 flex items-center gap-3 animate-fadeIn z-20 font-mono text-xs">
           <div className="flex items-center gap-1.5 text-accent-scan shrink-0 font-bold">
             <Radio className="h-4 w-4 text-accent-scan animate-pulse" />
-            <span>[VOICEOVER]</span>
+            <span>[LIVE PRESENTATION]</span>
           </div>
           <p className="text-text-primary text-xs truncate font-sans font-medium">{currentCaption}</p>
         </div>
@@ -652,7 +671,7 @@ function SlideCover({ onNext, onStart }: { onNext: () => void; onStart: () => vo
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded bg-accent-scan text-bg-void font-mono font-bold text-xs hover:bg-accent-scan/90 transition-colors cursor-pointer"
         >
           <Play className="h-4 w-4 fill-bg-void" />
-          <span>PLAY AUDIO PRESENTATION</span>
+          <span>PLAY LIVE PRESENTATION</span>
         </button>
         <button
           type="button"
