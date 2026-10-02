@@ -109,10 +109,9 @@ interface FindingComment {
   message: string;
 }
 
-export { FoundByBadge } from "@/components/found-by-badge";
 import { FoundByBadge } from "@/components/found-by-badge";
 
-export function renderFoundByBadge(foundBy?: string, size: "sm" | "md" = "sm") {
+function renderFoundByBadge(foundBy?: string, size: "sm" | "md" = "sm") {
   return <FoundByBadge foundBy={foundBy} size={size} />;
 }
 
