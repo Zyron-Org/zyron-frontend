@@ -68,7 +68,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
     category: "Vision",
     script:
-      "Good day, everyone! Welcome to the pitch presentation for Zairon Protocol Security. I am excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zairon, we are changing that by combining automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
+      "Welcome to Zairon Protocol Security. We are building the cryptographic security infrastructure for Web3 protocols. Traditional security relies on slow, opaque PDF reports. Zairon replaces this with automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
   },
   {
     id: "problem",
@@ -77,7 +77,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Smart contracts secure tens of billions in value, yet audits remain slow, expensive, and unverifiable.",
     category: "Market",
     script:
-      "Now, let us talk about the problem. Smart contracts currently secure over one hundred billion dollars in total value locked, yet the security review process is a massive bottleneck. Protocol teams spend six to ten weeks waiting for top audit firms to start. And what do they get at the end? A static PDF report that becomes completely obsolete the moment they tweak a line of code! Furthermore, there is zero cryptographic link between what was audited in that PDF and what actually gets deployed onchain. This is why even audited protocols keep getting exploited.",
+      "Smart contracts secure over one hundred billion dollars in value, yet auditing remains a massive bottleneck. Protocol teams wait six to ten weeks for top firms, only to receive static PDF reports that become outdated the moment code changes. Even audited protocols still get exploited.",
   },
   {
     id: "solution",
@@ -86,7 +86,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
     category: "Product",
     script:
-      "So, how do we solve this? Zairon introduces continuous, verifiable protocol security built on three core layers. First, automated A-S-T analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
+      "Zairon solves this with three continuous layers: automated A-S-T static analysis executed in seconds, structured dual-pane human auditor review to eliminate false alarms, and immutable on-chain attestations anchoring bytecode hashes and findings onchain for independent verification.",
   },
   {
     id: "technology",
@@ -95,7 +95,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
     category: "Product",
     script:
-      "Let us dive deeper into our underlying technology engine. When code is submitted to Zairon, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
+      "Our engine parses Solidity into Abstract Syntax Trees and Control Flow Graphs, executing fourteen specialized security passes. We scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks before human review even begins.",
   },
   {
     id: "human-review",
@@ -104,7 +104,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Automated tools surface candidates. Human experts make the final judgment.",
     category: "Product",
     script:
-      "Automated scanners are great, but tools alone cannot catch complex economic exploits. That is where our Dual-Pane Auditor Workbench comes in. Certified human auditors inspect code side-by-side with automated findings. They calibrate severity levels, write inline remediation guidance, track fixes in real time, and support multi-file projects. This dual approach gives us higher signal and significantly lower noise than any pure automated scanner.",
+      "Automated tools alone cannot catch complex economic exploits. In our Dual-Pane Auditor Workbench, certified human experts inspect code side-by-side with automated candidate findings. Auditors calibrate severities, write remediation guidance, and track fix verification in real time.",
   },
   {
     id: "attestation",
@@ -113,7 +113,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
     category: "Product",
     script:
-      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zairon generates an on-chain attestation anchoring the S-H-A two fifty-six hash of the exact compiled bytecode, the Merkle root of all findings, E-I-P seven twelve auditor signatures, and engagement timestamps onto public E-V-M registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
+      "Our core innovation is Verifiable Certificates instead of untrusted PDFs. When an audit is finalized, Zairon publishes an on-chain attestation anchoring the S-H-A two fifty-six bytecode hash, Merkle root of findings, and E-I-P seven twelve auditor signatures directly onto public E-V-M registries.",
   },
   {
     id: "how-it-works",
@@ -122,7 +122,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Transparent audit process from client code submission to on-chain attestation.",
     category: "Product",
     script:
-      "Let me walk you through our simple five-stage audit lifecycle. Stage one: the client submits their smart contract repository. Stage two: our automated A-S-T engine executes 14 security passes. Stage three: expert auditors review and validate findings in the dual-pane workbench. Stage four: issues are triaged, client applies fixes, and patches are verified. And stage five: the final cryptographic attestation is generated and published onchain. It is transparent from start to finish.",
+      "Our five-stage lifecycle is completely transparent: Stage one, client repository submission. Stage two, automated 14-pass A-S-T analysis. Stage three, dual-pane expert human review. Stage four, issue triage and fix verification. Stage five, final on-chain cryptographic attestation.",
   },
   {
     id: "market",
@@ -131,7 +131,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Sitting at the intersection of security tooling and on-chain trust.",
     category: "Market",
     script:
-      "Looking at the market, the demand for verifiable security infrastructure is booming. Thousands of smart contracts are deployed daily across Layer-2 rollups like Arbitrum, Base, and Optimism. Institutional players and real-world asset protocols are demanding higher cryptographic assurance before committing capital. The Web3 market is shifting away from one-off compliance checks toward continuous, verifiable security.",
+      "Demand for verifiable security infrastructure is surging. Thousands of contracts deploy daily across Layer-2 rollups like Arbitrum, Base, and Optimism. Institutional players and real-world asset protocols now demand continuous, cryptographic security assurance over one-off compliance checks.",
   },
   {
     id: "business-model",
@@ -140,7 +140,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Fixed-price audit engagements, continuous scanning plans, and enterprise verification.",
     category: "Business",
     script:
-      "Our business model combines immediate high-margin revenue with long-term subscription growth. We charge fixed-price engagement fees for full security reviews with on-chain attestations. Alongside this, we offer continuous security plans for ongoing pull-request scanning and priority auditor triage, creating a clear pathway from project-based fees to recurring annual revenue.",
+      "We operate a high-margin hybrid model: charging fixed-price engagement fees for full audits with on-chain attestations, combined with continuous security subscriptions for pull-request scanning and priority triage. This creates a predictable transition to annual recurring revenue.",
   },
   {
     id: "competition",
@@ -149,7 +149,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
     category: "Business",
     script:
-      "When you compare Zairon to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zairon delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
+      "Zairon combines compiler-level speed with deep human expertise and verifiable bytecode proofs. Traditional firms are slow and deliver static PDFs. Pure scanners suffer from high false positive rates. Zairon delivers fast, verifiable, and expert-reviewed security.",
   },
   {
     id: "roadmap",
@@ -158,7 +158,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "From core AST engine and Arbitrum Sepolia attestations to ERC-8004 auditor identity.",
     category: "Traction",
     script:
-      "Where are we today? Our core A-S-T engine, auditor workbench, and Arbitrum Sepolia attestation registry are fully live and operational. In the near term, we are expanding multi-file inheritance analysis, false positive reduction, and client dashboards. Moving forward, we are building decentralized auditor identity on E-R-C eight thousand and four, multi-chain support, and continuous active monitoring.",
+      "Our core A-S-T engine, auditor workbench, and Arbitrum Sepolia attestation registry are live. We are now expanding multi-file inheritance analysis, client dashboards, decentralized auditor identity on E-R-C eight thousand and four, and continuous active monitoring.",
   },
   {
     id: "vision",
@@ -167,7 +167,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
     category: "Vision",
     script:
-      "To wrap up, Zairon exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
+      "Zairon is building the trust layer for smart contract security. We are onboarding design partner protocols, security researchers, and strategic supporters who share our vision for verifiable security. Join us in making smart contract security genuinely trusted onchain.",
   },
 ];
 
@@ -515,6 +515,8 @@ export default function PitchDeckPage() {
           </span>
           <span className="text-text-muted">•</span>
           <span className="text-text-primary truncate max-w-xs">{SLIDES_META[currentSlide].title}</span>
+          <span className="text-text-muted">•</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-bg-panel-raised text-signal-resolved border border-border-hairline">⏱️ ~3m 45s Pitch</span>
         </div>
 
         {/* Right Action Controls */}
