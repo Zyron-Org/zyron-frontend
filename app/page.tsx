@@ -444,6 +444,13 @@ export default function LandingPage() {
             >
               FAQ
             </Link>
+            <Link
+              href="/verify"
+              className="px-3 py-1.5 rounded-[4px] text-accent-scan hover:bg-accent-scan/10 transition-colors flex items-center gap-1 font-semibold"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Verify
+            </Link>
           </nav>
 
           {/* Right: Theme Toggle + Globe + Login Button + Mobile Hamburger */}
@@ -534,6 +541,17 @@ export default function LandingPage() {
                 >
                   <span>FAQ</span>
                   <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/verify"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-accent-scan hover:bg-accent-scan/10 transition-colors font-semibold"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <ShieldCheck className="w-3.5 h-3.5" />
+                    Verify Attestation
+                  </span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-accent-scan" />
                 </Link>
               </div>
 

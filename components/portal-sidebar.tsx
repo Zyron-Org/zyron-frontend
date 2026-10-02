@@ -21,6 +21,7 @@ import {
   X,
   PanelLeftClose,
   PanelLeft,
+  ShieldCheck,
 } from "lucide-react";
 import { Eyebrow } from "@/components/ui/eyebrow";
 import { Badge } from "@/components/ui/badge";
@@ -150,6 +151,13 @@ export function PortalSidebar() {
           label: "Account Settings",
           icon: SlidersHorizontal,
           badge: null,
+        },
+        {
+          href: "/verify",
+          label: "Verify Attestation",
+          icon: ShieldCheck,
+          badge: "PUBLIC",
+          badgeColor: "scan" as const,
         },
       ],
     },
