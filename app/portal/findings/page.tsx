@@ -70,8 +70,11 @@ interface AggregatedFinding {
   sourceCode?: string;
   fuzzTestStatus?: string;
   remediationNote?: string;
+  foundBy?: string;
   comments: CommentMessage[];
 }
+
+import { FoundByBadge } from "@/components/found-by-badge";
 
 export default function OpenFindingsPage() {
   const [filterStatus, setFilterStatus] = React.useState<"all" | "open" | "fix-submitted">("all");
@@ -133,6 +136,7 @@ export default function OpenFindingsPage() {
               sourceCode: audit.sourceCode || undefined,
               fuzzTestStatus: f.fuzzTestStatus || undefined,
               remediationNote: f.remediationNote || undefined,
+              foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase(),
               comments: Array.isArray(f.comments)
                 ? f.comments.map((c: any) => ({
                     id: c.id,
@@ -639,6 +643,8 @@ export default function OpenFindingsPage() {
                       <span className="font-mono text-xs font-semibold px-2 py-0.5 rounded-md bg-black/5 dark:bg-white/5 text-text-muted">
                         {finding.displayId}
                       </span>
+
+                      <FoundByBadge foundBy={finding.foundBy} />
 
                       <h3 className="font-display text-base font-bold text-text-primary tracking-tight">
                         {finding.title}

@@ -42,6 +42,7 @@ import { apiClient } from "@/lib/api-client";
 import { FindingCodeViewer } from "@/components/finding-code-viewer";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { FoundByBadge } from "@/components/found-by-badge";
 
 interface CommentMessage {
   id: string;
@@ -67,6 +68,7 @@ interface DetailedFinding {
   remediatedCode?: string;
   fuzzTestStatus?: string;
   remediationNote?: string;
+  foundBy?: string;
   comments: CommentMessage[];
 }
 
@@ -150,6 +152,7 @@ export default function AuditStatusTrackerPage() {
               vulnerableLines: f.vulnerableLines || undefined,
               remediatedCode: f.remediatedCode || undefined,
               remediationNote: f.remediationNote || undefined,
+              foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase(),
               comments: Array.isArray(f.comments)
                 ? f.comments.map((c: any) => ({
                     id: c.id,
@@ -1242,6 +1245,7 @@ export default function AuditStatusTrackerPage() {
                           <Badge severity={finding.severity} size="sm">
                             {finding.severity.toUpperCase()} ({finding.cvss})
                           </Badge>
+                          <FoundByBadge foundBy={finding.foundBy} />
                           <span className="font-mono text-xs text-text-muted">
                             {finding.location}
                           </span>

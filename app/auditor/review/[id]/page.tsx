@@ -97,6 +97,7 @@ interface TriageFinding {
   fpJustification?: string;
   impact?: string;
   vulnerableCode?: string;
+  foundBy?: "STATIC" | "AI" | "MANUAL";
 }
 
 interface FindingComment {
@@ -106,6 +107,13 @@ interface FindingComment {
   role: "auditor" | "client";
   timestamp: string;
   message: string;
+}
+
+export { FoundByBadge } from "@/components/found-by-badge";
+import { FoundByBadge } from "@/components/found-by-badge";
+
+export function renderFoundByBadge(foundBy?: string, size: "sm" | "md" = "sm") {
+  return <FoundByBadge foundBy={foundBy} size={size} />;
 }
 
 export default function AuditorCodeReviewPage() {
@@ -296,6 +304,7 @@ export default function AuditorCodeReviewPage() {
           fpJustification: f.fpJustification || "",
           impact: f.impact || "",
           vulnerableCode: f.vulnerableCode || "",
+          foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase() as any,
         }));
 
         setFindings(realFindings);
@@ -604,6 +613,7 @@ library TransferHelper {
         description: newFindingForm.description,
         vulnerableCode: newFindingForm.vulnerableCode,
         remediationNote: newFindingForm.remediation,
+        foundBy: "MANUAL",
       });
 
       const created = res.data;
@@ -622,6 +632,7 @@ library TransferHelper {
         fpJustification: "",
         impact: created.impact || newFindingForm.impact,
         vulnerableCode: created.vulnerableCode || newFindingForm.vulnerableCode,
+        foundBy: "MANUAL",
       };
 
       setFindings((prev) => [mappedNewFinding, ...prev]);
@@ -660,6 +671,7 @@ library TransferHelper {
         fpJustification: "",
         impact: newFindingForm.impact,
         vulnerableCode: newFindingForm.vulnerableCode,
+        foundBy: "MANUAL",
       };
       setFindings((prev) => [localFinding, ...prev]);
       setSelectedFindingId(localFinding.id);
@@ -1598,6 +1610,7 @@ mitigated or verified false positives before production deployment.
                             <Badge severity={f.severity} size="sm">
                               {f.severity.toUpperCase()}
                             </Badge>
+                            {renderFoundByBadge(f.foundBy)}
                             <span className="text-[10px] text-text-muted truncate font-mono">
                               {f.file.split("/").pop()}:{f.line}
                             </span>
@@ -1707,6 +1720,7 @@ mitigated or verified false positives before production deployment.
                         <Badge severity={selectedFinding.severity} size="sm">
                           {selectedFinding.severity.toUpperCase()} ({selectedFinding.cvss})
                         </Badge>
+                        {renderFoundByBadge(selectedFinding.foundBy, "md")}
                         <span className="text-text-muted text-[11px] font-mono">{selectedFinding.swcId}</span>
                       </div>
                       <h4 className="font-sans text-sm font-semibold text-text-primary leading-snug">
