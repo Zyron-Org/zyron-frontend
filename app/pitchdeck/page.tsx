@@ -347,8 +347,9 @@ export default function PitchDeckPage() {
       if (!slide || !slide.script) return;
 
       const utterance = new SpeechSynthesisUtterance(slide.script);
-      utterance.rate = 0.95; // Fluent, energetic presentation pacing
-      utterance.pitch = 0.82; // Deep, confident male tone
+      utterance.rate = 1.08; // Energetic, snappy presentation pace (no lagging)
+      utterance.pitch = 1.0; // Clean, natural male clarity (no distortion)
+      utterance.volume = 1.0; // Maximum output volume
 
       const voices = window.speechSynthesis.getVoices();
       const activeVoice =
