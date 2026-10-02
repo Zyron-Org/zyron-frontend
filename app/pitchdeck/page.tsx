@@ -45,6 +45,7 @@ import {
   Crosshair,
   Volume2,
   VolumeX,
+  User,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -177,14 +178,37 @@ export default function PitchDeckPage() {
   const [isVoiceEnabled, setIsVoiceEnabled] = React.useState<boolean>(true);
   const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
   const [currentCaption, setCurrentCaption] = React.useState<string>("");
+  const [availableVoices, setAvailableVoices] = React.useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoiceURI, setSelectedVoiceURI] = React.useState<string>("");
   const deckContainerRef = React.useRef<HTMLDivElement>(null);
   const selectedVoiceRef = React.useRef<SpeechSynthesisVoice | null>(null);
 
   const totalSlides = SLIDES_META.length;
 
+  // Helper to test if a voice is female
+  const isFemaleVoice = (v: SpeechSynthesisVoice) => {
+    const name = v.name.toLowerCase();
+    return (
+      name.includes("female") ||
+      name.includes("samantha") ||
+      name.includes("victoria") ||
+      name.includes("karen") ||
+      name.includes("moira") ||
+      name.includes("fiona") ||
+      name.includes("veena") ||
+      name.includes("kate") ||
+      name.includes("serena") ||
+      name.includes("tessa") ||
+      name.includes("allison") ||
+      name.includes("ava") ||
+      name.includes("susan")
+    );
+  };
+
   // Helper to test if a voice is male
   const isMaleVoice = (v: SpeechSynthesisVoice) => {
     const name = v.name.toLowerCase();
+    if (isFemaleVoice(v)) return false;
     return (
       name.includes("male") ||
       name.includes("guy") ||
@@ -198,7 +222,11 @@ export default function PitchDeckPage() {
       name.includes("bruce") ||
       name.includes("fred") ||
       name.includes("oliver") ||
-      name.includes("thomas")
+      name.includes("thomas") ||
+      name.includes("gordon") ||
+      name.includes("rishi") ||
+      name.includes("tariq") ||
+      !isFemaleVoice(v)
     );
   };
 
@@ -209,6 +237,7 @@ export default function PitchDeckPage() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
+        setAvailableVoices(voices);
         const preferredVoice =
           // 1. Male African / Nigerian voice
           voices.find(
@@ -230,18 +259,24 @@ export default function PitchDeckPage() {
               v.name.toLowerCase().includes("nigeria") ||
               v.name.toLowerCase().includes("africa")
           ) ||
-          // 2. Male English voice (e.g. Daniel, George, Arthur, David)
+          // 2. Male English voice (e.g. Daniel, George, Arthur, David, Fred, Alex)
           voices.find((v) => v.lang.startsWith("en") && isMaleVoice(v)) ||
           voices.find(
             (v) =>
               v.name.includes("Daniel") ||
               v.name.includes("George") ||
               v.name.includes("David") ||
-              v.name.includes("Arthur")
+              v.name.includes("Arthur") ||
+              v.name.includes("Alex") ||
+              v.name.includes("Fred")
           ) ||
           voices.find((v) => v.lang.startsWith("en")) ||
           voices[0];
-        selectedVoiceRef.current = preferredVoice || null;
+
+        if (preferredVoice) {
+          selectedVoiceRef.current = preferredVoice;
+          setSelectedVoiceURI(preferredVoice.voiceURI);
+        }
       }
     };
 
@@ -282,8 +317,15 @@ export default function PitchDeckPage() {
       utterance.rate = 0.98; // Fluent, natural pacing
       utterance.pitch = 0.95; // Stronger, deeper male voice pitch
 
-      if (selectedVoiceRef.current) {
-        utterance.voice = selectedVoiceRef.current;
+      const voices = window.speechSynthesis.getVoices();
+      const activeVoice =
+        (selectedVoiceURI && voices.find((v) => v.voiceURI === selectedVoiceURI)) ||
+        selectedVoiceRef.current ||
+        voices.find((v) => isMaleVoice(v)) ||
+        voices[0];
+
+      if (activeVoice) {
+        utterance.voice = activeVoice;
       }
 
       utterance.onstart = () => {
@@ -306,7 +348,7 @@ export default function PitchDeckPage() {
 
       window.speechSynthesis.speak(utterance);
     },
-    [isVoiceEnabled, totalSlides]
+    [isVoiceEnabled, selectedVoiceURI, totalSlides]
   );
 
   // Playback effect when slide changes or autoplay is toggled
@@ -440,6 +482,35 @@ export default function PitchDeckPage() {
 
         {/* Right Action Controls */}
         <div className="flex items-center gap-2">
+          {/* System Voice Selection Dropdown */}
+          {availableVoices.length > 0 && (
+            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-bg-panel border border-border-hairline">
+              <User className="h-3.5 w-3.5 text-accent-scan shrink-0" />
+              <select
+                value={selectedVoiceURI}
+                onChange={(e) => {
+                  const uri = e.target.value;
+                  setSelectedVoiceURI(uri);
+                  const voice = availableVoices.find((v) => v.voiceURI === uri);
+                  if (voice) {
+                    selectedVoiceRef.current = voice;
+                    if (isAutoPlaying) {
+                      speakCurrentSlide(currentSlide, true);
+                    }
+                  }
+                }}
+                className="bg-transparent text-text-primary text-xs font-mono border-none outline-none max-w-[140px] truncate cursor-pointer"
+                title="Select Male Presentation Voice"
+              >
+                {availableVoices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI} className="bg-bg-panel text-text-primary">
+                    {v.name} ({v.lang})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Voiceover Mute/Unmute Toggle */}
           <button
             type="button"
