@@ -46,6 +46,8 @@ import {
   Volume2,
   VolumeX,
   User,
+  Globe,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -174,16 +176,46 @@ export default function PitchDeckPage() {
   const [currentSlide, setCurrentSlide] = React.useState<number>(0);
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
   const [isOverviewOpen, setIsOverviewOpen] = React.useState<boolean>(false);
+  const [isAfricanVoiceGuideOpen, setIsAfricanVoiceGuideOpen] = React.useState<boolean>(false);
   const [isAutoPlaying, setIsAutoPlaying] = React.useState<boolean>(false);
   const [isVoiceEnabled, setIsVoiceEnabled] = React.useState<boolean>(true);
   const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
   const [currentCaption, setCurrentCaption] = React.useState<string>("");
   const [availableVoices, setAvailableVoices] = React.useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoiceURI, setSelectedVoiceURI] = React.useState<string>("");
+  const [hasAfricanVoice, setHasAfricanVoice] = React.useState<boolean>(false);
   const deckContainerRef = React.useRef<HTMLDivElement>(null);
   const selectedVoiceRef = React.useRef<SpeechSynthesisVoice | null>(null);
 
   const totalSlides = SLIDES_META.length;
+
+  // Helper to check if a voice is African
+  const isAfricanVoice = (v: SpeechSynthesisVoice) => {
+    const lang = v.lang.toLowerCase();
+    const name = v.name.toLowerCase();
+    return (
+      lang.includes("ng") ||
+      lang.includes("za") ||
+      lang.includes("gh") ||
+      lang.includes("ke") ||
+      lang.includes("tz") ||
+      lang.includes("ug") ||
+      lang.includes("zw") ||
+      name.includes("nigeria") ||
+      name.includes("south africa") ||
+      name.includes("ghana") ||
+      name.includes("kenya") ||
+      name.includes("tanzania") ||
+      name.includes("uganda") ||
+      name.includes("zimbabwe") ||
+      name.includes("africa") ||
+      name.includes("ekaette") ||
+      name.includes("lesedi") ||
+      name.includes("wanjiku") ||
+      name.includes("sibusiso") ||
+      name.includes("lwandle")
+    );
+  };
 
   // Helper to test if a voice is female
   const isFemaleVoice = (v: SpeechSynthesisVoice) => {
@@ -237,28 +269,24 @@ export default function PitchDeckPage() {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
-        setAvailableVoices(voices);
+        // Sort African voices first
+        const sorted = [...voices].sort((a, b) => {
+          const aAf = isAfricanVoice(a);
+          const bAf = isAfricanVoice(b);
+          if (aAf && !bAf) return -1;
+          if (!aAf && bAf) return 1;
+          return 0;
+        });
+
+        setAvailableVoices(sorted);
+
+        const africanFound = voices.some((v) => isAfricanVoice(v));
+        setHasAfricanVoice(africanFound);
+
         const preferredVoice =
           // 1. Male African / Nigerian voice
-          voices.find(
-            (v) =>
-              (v.lang.toLowerCase().includes("ng") ||
-                v.lang.toLowerCase().includes("za") ||
-                v.lang.toLowerCase().includes("gh") ||
-                v.lang.toLowerCase().includes("ke") ||
-                v.name.toLowerCase().includes("nigeria") ||
-                v.name.toLowerCase().includes("africa")) &&
-              isMaleVoice(v)
-          ) ||
-          voices.find(
-            (v) =>
-              v.lang.toLowerCase().includes("ng") ||
-              v.lang.toLowerCase().includes("za") ||
-              v.lang.toLowerCase().includes("gh") ||
-              v.lang.toLowerCase().includes("ke") ||
-              v.name.toLowerCase().includes("nigeria") ||
-              v.name.toLowerCase().includes("africa")
-          ) ||
+          voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
+          voices.find((v) => isAfricanVoice(v)) ||
           // 2. Male English voice (e.g. Daniel, George, Arthur, David, Fred, Alex)
           voices.find((v) => v.lang.startsWith("en") && isMaleVoice(v)) ||
           voices.find(
@@ -315,13 +343,14 @@ export default function PitchDeckPage() {
       if (!slide || !slide.script) return;
 
       const utterance = new SpeechSynthesisUtterance(slide.script);
-      utterance.rate = 0.98; // Fluent, natural pacing
-      utterance.pitch = 0.95; // Stronger, deeper male voice pitch
+      utterance.rate = 0.96; // Fluent, energetic presentation pacing
+      utterance.pitch = 0.92; // Deep, confident tone
 
       const voices = window.speechSynthesis.getVoices();
       const activeVoice =
         (selectedVoiceURI && voices.find((v) => v.voiceURI === selectedVoiceURI)) ||
         selectedVoiceRef.current ||
+        voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
         voices.find((v) => isMaleVoice(v)) ||
         voices[0];
 
@@ -410,6 +439,7 @@ export default function PitchDeckPage() {
         toggleFullscreen();
       } else if (e.key === "Escape") {
         if (isOverviewOpen) setIsOverviewOpen(false);
+        if (isAfricanVoiceGuideOpen) setIsAfricanVoiceGuideOpen(false);
       } else if (e.key === "o" || e.key === "O" || e.key === "g" || e.key === "G") {
         e.preventDefault();
         setIsOverviewOpen((prev) => !prev);
@@ -418,7 +448,7 @@ export default function PitchDeckPage() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [nextSlide, prevSlide, isOverviewOpen]);
+  }, [nextSlide, prevSlide, isOverviewOpen, isAfricanVoiceGuideOpen]);
 
   // Fullscreen handler
   const toggleFullscreen = () => {
@@ -483,9 +513,22 @@ export default function PitchDeckPage() {
 
         {/* Right Action Controls */}
         <div className="flex items-center gap-2">
+          {/* African Voice Guide Button if no African voice detected */}
+          {!hasAfricanVoice && (
+            <button
+              type="button"
+              onClick={() => setIsAfricanVoiceGuideOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-bg-panel border border-accent-scan/40 hover:border-accent-scan text-accent-scan font-mono text-xs transition-colors cursor-pointer"
+              title="How to enable Nigerian/African system voice"
+            >
+              <span>🇳🇬 Add African Voice</span>
+              <HelpCircle className="h-3 w-3" />
+            </button>
+          )}
+
           {/* System Voice Selection Dropdown */}
           {availableVoices.length > 0 && (
-            <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded bg-bg-panel border border-border-hairline">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-bg-panel border border-border-hairline">
               <User className="h-3.5 w-3.5 text-accent-scan shrink-0" />
               <select
                 value={selectedVoiceURI}
@@ -500,12 +543,12 @@ export default function PitchDeckPage() {
                     }
                   }
                 }}
-                className="bg-transparent text-text-primary text-xs font-mono border-none outline-none max-w-[140px] truncate cursor-pointer"
-                title="Select Male Presentation Voice"
+                className="bg-transparent text-text-primary text-xs font-mono border-none outline-none max-w-[150px] truncate cursor-pointer"
+                title="Select Presentation Voice"
               >
                 {availableVoices.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI} className="bg-bg-panel text-text-primary">
-                    {v.name} ({v.lang})
+                    {isAfricanVoice(v) ? "🇳🇬 " : ""}{v.name} ({v.lang})
                   </option>
                 ))}
               </select>
@@ -724,6 +767,60 @@ export default function PitchDeckPage() {
                 </div>
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* African Voice Guide Modal */}
+      {isAfricanVoiceGuideOpen && (
+        <div className="fixed inset-0 z-50 bg-bg-void/95 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-fadeIn font-sans">
+          <div className="bg-bg-panel border border-border-hairline max-w-lg w-full rounded p-6 space-y-4 shadow-xl font-mono text-xs">
+            <div className="flex items-center justify-between border-b border-border-hairline pb-3">
+              <div className="flex items-center gap-2 text-accent-scan font-bold text-sm">
+                <span>🇳🇬 HOW TO ENABLE NIGERIAN/AFRICAN SYSTEM VOICE</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsAfricanVoiceGuideOpen(false)}
+                className="text-text-muted hover:text-text-primary"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 font-sans text-xs text-text-muted leading-relaxed">
+              <p className="text-text-primary">
+                Your browser is currently using the system male voice fallback. You can enable Apple/Google's native Nigerian or African English voices in 10 seconds:
+              </p>
+
+              <div className="p-3 rounded bg-bg-panel-raised border border-border-hairline space-y-2 font-mono text-[11px]">
+                <div className="text-accent-scan font-bold"> On macOS (Mac):</div>
+                <ol className="list-decimal list-inside space-y-1 text-text-primary">
+                  <li>Open <strong>System Settings → Accessibility</strong></li>
+                  <li>Click <strong>Spoken Content → System Voice</strong></li>
+                  <li>Select <strong>Manage Voices...</strong></li>
+                  <li>Search <strong>English (Nigeria)</strong> or <strong>English (South Africa)</strong></li>
+                  <li>Click Download (Free) and select <strong>Ekaette</strong> or <strong>Lesedi</strong>!</li>
+                </ol>
+              </div>
+
+              <div className="p-3 rounded bg-bg-panel-raised border border-border-hairline space-y-2 font-mono text-[11px]">
+                <div className="text-accent-scan font-bold">🌐 On Google Chrome / Android:</div>
+                <p className="text-text-primary">
+                  Chrome automatically includes <strong>Google English (Nigeria)</strong> when system locale or Google TTS pack is enabled.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setIsAfricanVoiceGuideOpen(false)}
+                className="px-4 py-2 rounded bg-accent-scan text-bg-void font-bold cursor-pointer"
+              >
+                Got It!
+              </button>
+            </div>
           </div>
         </div>
       )}
