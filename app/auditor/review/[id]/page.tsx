@@ -1100,6 +1100,49 @@ mitigated or verified false positives before production deployment.
 
   return (
     <div className="w-full space-y-2">
+      {/* ERROR BANNER WHEN SCAN OR PROVER HAS FAILED */}
+      {((auditData?.stage as string)?.toUpperCase() === "FAILED" || (ticketStage as string)?.toUpperCase() === "FAILED") && (
+        <div className="rounded-2xl border border-signal-critical/40 bg-signal-critical/10 p-2 sm:p-2.5 shadow-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-bg-panel rounded-xl p-5 border border-signal-critical/30 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-signal-critical font-bold text-sm">
+                <AlertTriangle className="h-5 w-5" />
+                <span>AI EVM PROVER EXECUTION HALTED (ERROR)</span>
+              </div>
+              <Badge severity="critical" size="sm">
+                FAILED
+              </Badge>
+            </div>
+
+            <div className="space-y-2">
+              <p className="text-text-primary text-xs leading-relaxed font-sans font-medium">
+                The autonomous AI EVM sandbox prover encountered an error while synthesizing or proving exploit contracts for ticket <strong>#{audit.id}</strong>.
+              </p>
+              {(auditData?.failureReason || audit?.failureReason) && (
+                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 font-mono text-xs text-signal-critical break-words">
+                  {auditData?.failureReason || audit?.failureReason}
+                </div>
+              )}
+              <p className="text-text-muted text-[11px] leading-relaxed">
+                Execution has been paused. Please verify or update your <code>GEMINI_API_KEY</code> in the environment, then trigger a rerun below.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <Button
+                variant="primary"
+                size="sm"
+                leftIcon={<RotateCcw className="h-3.5 w-3.5" />}
+                onClick={handleRunProver}
+                isLoading={isRunningProver}
+              >
+                Rerun AI Sandbox Prover
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* SUCCESS BANNER WHEN REPORT IS FINALIZED */}
       {isFinalized && (
         <div className="rounded-2xl border border-signal-resolved/40 bg-signal-resolved/10 p-2 sm:p-2.5 shadow-sm animate-in fade-in duration-200">

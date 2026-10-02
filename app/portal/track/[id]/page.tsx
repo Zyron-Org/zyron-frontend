@@ -645,6 +645,35 @@ export default function AuditStatusTrackerPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans">
+      {/* ─── ERROR BANNER WHEN PIPELINE FAILED ─── */}
+      {rawStage === "FAILED" && (
+        <div className="rounded-2xl border border-signal-critical/40 bg-signal-critical/10 p-2 sm:p-2.5 shadow-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-bg-panel rounded-xl p-5 border border-signal-critical/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5 text-signal-critical font-bold text-sm">
+                <AlertTriangle className="h-5 w-5" />
+                <span>AUDIT PIPELINE HALTED (VERIFICATION ERROR)</span>
+              </div>
+              <Badge severity="critical" size="sm">
+                FAILED
+              </Badge>
+            </div>
+
+            <p className="text-text-primary text-xs leading-relaxed font-sans font-medium">
+              The automated scan and AI prover pipeline encountered an error for ticket <strong>#{ticketId}</strong>.
+            </p>
+            {audit.failureReason && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 font-mono text-xs text-signal-critical break-words">
+                {audit.failureReason}
+              </div>
+            )}
+            <p className="text-text-muted text-[11px] leading-relaxed">
+              Execution has been halted until an administrator corrects the configuration or environment key and triggers a rerun.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ─── 1. TOP HEADER & BREADCRUMBS ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
