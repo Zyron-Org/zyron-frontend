@@ -66,7 +66,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
     category: "Vision",
     script:
-      "Good day, everyone! Welcome to the pitch presentation for Zyron. I am super excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zyron, we are changing that by combining automated 14-pass AST static analysis, double-blind human auditor review, and immutable on-chain attestations.",
+      "Good day, everyone! Welcome to the pitch presentation for Zai-ron Protocol Security. I am excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zai-ron, we are changing that by combining automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
   },
   {
     id: "problem",
@@ -84,7 +84,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
     category: "Product",
     script:
-      "So, how do we solve this? Zyron introduces continuous, verifiable protocol security built on three core layers. First, automated AST analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
+      "So, how do we solve this? Zai-ron introduces continuous, verifiable protocol security built on three core layers. First, automated A-S-T analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
   },
   {
     id: "technology",
@@ -93,7 +93,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
     category: "Product",
     script:
-      "Let us dive deeper into our underlying technology engine. When code is submitted to Zyron, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
+      "Let us dive deeper into our underlying technology engine. When code is submitted to Zai-ron, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
   },
   {
     id: "human-review",
@@ -111,7 +111,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
     category: "Product",
     script:
-      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zyron generates an on-chain attestation anchoring the SHA-256 hash of the exact compiled bytecode, the Merkle root of all findings, EIP-712 auditor signatures, and engagement timestamps onto public EVM registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
+      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zai-ron generates an on-chain attestation anchoring the S-H-A two fifty-six hash of the exact compiled bytecode, the Merkle root of all findings, E-I-P seven twelve auditor signatures, and engagement timestamps onto public E-V-M registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
   },
   {
     id: "how-it-works",
@@ -120,7 +120,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Transparent audit process from client code submission to on-chain attestation.",
     category: "Product",
     script:
-      "Let me walk you through our simple five-stage audit lifecycle. Stage one: the client submits their smart contract repository. Stage two: our automated AST engine executes 14 security passes. Stage three: expert auditors review and validate findings in the dual-pane workbench. Stage four: issues are triaged, client applies fixes, and patches are verified. And stage five: the final cryptographic attestation is generated and published onchain. It is transparent from start to finish.",
+      "Let me walk you through our simple five-stage audit lifecycle. Stage one: the client submits their smart contract repository. Stage two: our automated A-S-T engine executes 14 security passes. Stage three: expert auditors review and validate findings in the dual-pane workbench. Stage four: issues are triaged, client applies fixes, and patches are verified. And stage five: the final cryptographic attestation is generated and published onchain. It is transparent from start to finish.",
   },
   {
     id: "market",
@@ -147,7 +147,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
     category: "Business",
     script:
-      "When you compare Zyron to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zyron delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
+      "When you compare Zai-ron to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zai-ron delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
   },
   {
     id: "roadmap",
@@ -156,7 +156,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "From core AST engine and Arbitrum Sepolia attestations to ERC-8004 auditor identity.",
     category: "Traction",
     script:
-      "Where are we today? Our core AST engine, auditor workbench, and Arbitrum Sepolia attestation registry are fully live and operational. In the near term, we are expanding multi-file inheritance analysis, false positive reduction, and client dashboards. Moving forward, we are building decentralized auditor identity on ERC-8004, multi-chain support, and continuous active monitoring.",
+      "Where are we today? Our core A-S-T engine, auditor workbench, and Arbitrum Sepolia attestation registry are fully live and operational. In the near term, we are expanding multi-file inheritance analysis, false positive reduction, and client dashboards. Moving forward, we are building decentralized auditor identity on E-R-C eight thousand and four, multi-chain support, and continuous active monitoring.",
   },
   {
     id: "vision",
@@ -165,7 +165,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
     category: "Vision",
     script:
-      "To wrap up, Zyron exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
+      "To wrap up, Zai-ron exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
   },
 ];
 
@@ -182,7 +182,27 @@ export default function PitchDeckPage() {
 
   const totalSlides = SLIDES_META.length;
 
-  // Initialize SpeechSynthesis voice selection prioritizing African/Nigerian & expressive voices
+  // Helper to test if a voice is male
+  const isMaleVoice = (v: SpeechSynthesisVoice) => {
+    const name = v.name.toLowerCase();
+    return (
+      name.includes("male") ||
+      name.includes("guy") ||
+      name.includes("daniel") ||
+      name.includes("george") ||
+      name.includes("arthur") ||
+      name.includes("david") ||
+      name.includes("aaron") ||
+      name.includes("marcus") ||
+      name.includes("alex") ||
+      name.includes("bruce") ||
+      name.includes("fred") ||
+      name.includes("oliver") ||
+      name.includes("thomas")
+    );
+  };
+
+  // Initialize SpeechSynthesis voice selection prioritizing strong male African & English voices
   React.useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
 
@@ -190,22 +210,35 @@ export default function PitchDeckPage() {
       const voices = window.speechSynthesis.getVoices();
       if (voices.length > 0) {
         const preferredVoice =
+          // 1. Male African / Nigerian voice
+          voices.find(
+            (v) =>
+              (v.lang.toLowerCase().includes("ng") ||
+                v.lang.toLowerCase().includes("za") ||
+                v.lang.toLowerCase().includes("gh") ||
+                v.lang.toLowerCase().includes("ke") ||
+                v.name.toLowerCase().includes("nigeria") ||
+                v.name.toLowerCase().includes("africa")) &&
+              isMaleVoice(v)
+          ) ||
           voices.find(
             (v) =>
               v.lang.toLowerCase().includes("ng") ||
+              v.lang.toLowerCase().includes("za") ||
+              v.lang.toLowerCase().includes("gh") ||
+              v.lang.toLowerCase().includes("ke") ||
               v.name.toLowerCase().includes("nigeria") ||
               v.name.toLowerCase().includes("africa")
           ) ||
-          voices.find((v) => v.lang.startsWith("en-ZA") || v.lang.startsWith("en-GH") || v.lang.startsWith("en-KE")) ||
+          // 2. Male English voice (e.g. Daniel, George, Arthur, David)
+          voices.find((v) => v.lang.startsWith("en") && isMaleVoice(v)) ||
           voices.find(
             (v) =>
-              v.name.includes("Google") ||
-              v.name.includes("Natural") ||
-              v.name.includes("Samantha") ||
               v.name.includes("Daniel") ||
-              v.name.includes("Karen")
+              v.name.includes("George") ||
+              v.name.includes("David") ||
+              v.name.includes("Arthur")
           ) ||
-          voices.find((v) => v.lang.startsWith("en-US") || v.lang.startsWith("en-GB")) ||
           voices.find((v) => v.lang.startsWith("en")) ||
           voices[0];
         selectedVoiceRef.current = preferredVoice || null;
@@ -217,6 +250,17 @@ export default function PitchDeckPage() {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
   }, []);
+
+  // Format script for teleprompter display (reverting phonetic spellings for visual reading)
+  const formatCaptionForDisplay = (text: string) => {
+    return text
+      .replace(/Zai-ron/g, "Zyron")
+      .replace(/E-R-C eight thousand and four/g, "ERC-8004")
+      .replace(/A-S-T/g, "AST")
+      .replace(/E-I-P seven twelve/g, "EIP-712")
+      .replace(/S-H-A two fifty-six/g, "SHA-256")
+      .replace(/E-V-M/g, "EVM");
+  };
 
   // Function to handle speaking current slide presentation script
   const speakCurrentSlide = React.useCallback(
@@ -235,8 +279,8 @@ export default function PitchDeckPage() {
       if (!slide || !slide.script) return;
 
       const utterance = new SpeechSynthesisUtterance(slide.script);
-      utterance.rate = 1.0;
-      utterance.pitch = 1.05; // Slightly expressive tone for live presentation
+      utterance.rate = 0.98; // Fluent, natural pacing
+      utterance.pitch = 0.95; // Stronger, deeper male voice pitch
 
       if (selectedVoiceRef.current) {
         utterance.voice = selectedVoiceRef.current;
@@ -244,7 +288,7 @@ export default function PitchDeckPage() {
 
       utterance.onstart = () => {
         setIsSpeaking(true);
-        setCurrentCaption(slide.script);
+        setCurrentCaption(formatCaptionForDisplay(slide.script));
       };
 
       utterance.onend = () => {
