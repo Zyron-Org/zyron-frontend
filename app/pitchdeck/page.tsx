@@ -67,7 +67,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
     category: "Vision",
     script:
-      "Good day, everyone! Welcome to the pitch presentation for Zai-ron Protocol Security. I am excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zai-ron, we are changing that by combining automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
+      "Good day, everyone! Welcome to the pitch presentation for Zairon Protocol Security. I am excited to walk you through how we are building the cryptographic security infrastructure for Web3 protocols. You see, the current way protocols handle security reviews is broken—teams rely on slow, opaque PDF reports. At Zairon, we are changing that by combining automated 14-pass A-S-T static analysis, double-blind human auditor review, and immutable on-chain attestations.",
   },
   {
     id: "problem",
@@ -85,7 +85,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
     category: "Product",
     script:
-      "So, how do we solve this? Zai-ron introduces continuous, verifiable protocol security built on three core layers. First, automated A-S-T analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
+      "So, how do we solve this? Zairon introduces continuous, verifiable protocol security built on three core layers. First, automated A-S-T analysis that runs in seconds when code is submitted. Second, structured dual-pane human review where professional auditors calibrate findings and eliminate false alarms. And third, immutable on-chain attestations containing compiled bytecode hashes and Merkle roots of findings. This means anyone—investors, users, or DAO members—can independently verify protocol security directly onchain.",
   },
   {
     id: "technology",
@@ -94,7 +94,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
     category: "Product",
     script:
-      "Let us dive deeper into our underlying technology engine. When code is submitted to Zai-ron, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
+      "Let us dive deeper into our underlying technology engine. When code is submitted to Zairon, our compiler parses the Solidity source into Abstract Syntax Trees and constructs full Control Flow Graphs. We then run fourteen specialized security passes that scan for reentrancy, access control flaws, price oracle manipulation, proxy storage collisions, and Yul assembly risks. This surfaces high-signal candidate vulnerabilities before human reviewers even open the codebase.",
   },
   {
     id: "human-review",
@@ -112,7 +112,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
     category: "Product",
     script:
-      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zai-ron generates an on-chain attestation anchoring the S-H-A two fifty-six hash of the exact compiled bytecode, the Merkle root of all findings, E-I-P seven twelve auditor signatures, and engagement timestamps onto public E-V-M registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
+      "Here is our signature innovation: Verifiable Certificates instead of untrusted PDF documents. When an audit is finalized, Zairon generates an on-chain attestation anchoring the S-H-A two fifty-six hash of the exact compiled bytecode, the Merkle root of all findings, E-I-P seven twelve auditor signatures, and engagement timestamps onto public E-V-M registries. Anyone can query our registry contract with one RPC call to verify if the deployed bytecode was genuinely audited.",
   },
   {
     id: "how-it-works",
@@ -148,7 +148,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
     category: "Business",
     script:
-      "When you compare Zai-ron to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zai-ron delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
+      "When you compare Zairon to the competition, the advantage is clear. Traditional firms are thorough but incredibly slow and deliver static PDFs. Pure automated scanners are fast but suffer from eighty percent false positives. Zairon delivers the speed of compiler-level automation with the depth of human expertise, topped with verifiable on-chain attestations that no legacy firm provides.",
   },
   {
     id: "roadmap",
@@ -166,7 +166,7 @@ const SLIDES_META: SlideData[] = [
     subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
     category: "Vision",
     script:
-      "To wrap up, Zai-ron exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
+      "To wrap up, Zairon exists to build the trust layer for Web3 smart contract security. We are actively looking for early design partner protocols, feedback from security researchers, and strategic supporters who share our vision for verifiable security. Let us make security work that can actually be trusted onchain. Thank you for your time!",
   },
 ];
 
@@ -289,6 +289,7 @@ export default function PitchDeckPage() {
   // Format script for teleprompter display (reverting phonetic spellings for visual reading)
   const formatCaptionForDisplay = (text: string) => {
     return text
+      .replace(/Zairon/g, "Zyron")
       .replace(/Zai-ron/g, "Zyron")
       .replace(/E-R-C eight thousand and four/g, "ERC-8004")
       .replace(/A-S-T/g, "AST")
