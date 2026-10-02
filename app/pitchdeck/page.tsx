@@ -185,6 +185,7 @@ export default function PitchDeckPage() {
   const [hasAfricanVoice, setHasAfricanVoice] = React.useState<boolean>(false);
   const deckContainerRef = React.useRef<HTMLDivElement>(null);
   const selectedVoiceRef = React.useRef<SpeechSynthesisVoice | null>(null);
+  const audioPlayerRef = React.useRef<HTMLAudioElement | null>(null);
 
   const totalSlides = SLIDES_META.length;
 
@@ -330,12 +331,20 @@ export default function PitchDeckPage() {
       .replace(/E-V-M/g, "EVM");
   };
 
-  // Function to handle speaking current slide presentation script
+  // Function to handle speaking current slide presentation script (with MP3 audio file support)
   const speakCurrentSlide = React.useCallback(
     (slideIndex: number, autoAdvance: boolean) => {
-      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+      if (typeof window === "undefined") return;
 
-      window.speechSynthesis.cancel(); // Stop any existing speech
+      // Stop any existing audio or Web Speech
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+        audioPlayerRef.current = null;
+      }
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
 
       if (!isVoiceEnabled) {
         setIsSpeaking(false);
@@ -346,43 +355,64 @@ export default function PitchDeckPage() {
       const slide = SLIDES_META[slideIndex];
       if (!slide || !slide.script) return;
 
-      const utterance = new SpeechSynthesisUtterance(slide.script);
-      utterance.rate = 1.08; // Energetic, snappy presentation pace (no lagging)
-      utterance.pitch = 1.0; // Clean, natural male clarity (no distortion)
-      utterance.volume = 1.0; // Maximum output volume
+      const fallbackWebSpeech = () => {
+        if (!("speechSynthesis" in window)) return;
+        const utterance = new SpeechSynthesisUtterance(slide.script);
+        utterance.rate = 1.08;
+        utterance.pitch = 1.0;
+        utterance.volume = 1.0;
 
-      const voices = window.speechSynthesis.getVoices();
-      const activeVoice =
-        (selectedVoiceURI && voices.find((v) => v.voiceURI === selectedVoiceURI)) ||
-        selectedVoiceRef.current ||
-        voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
-        voices.find((v) => isMaleVoice(v) && v.lang.startsWith("en")) ||
-        voices.find((v) => isMaleVoice(v)) ||
-        voices[0];
+        const voices = window.speechSynthesis.getVoices();
+        const activeVoice =
+          (selectedVoiceURI && voices.find((v) => v.voiceURI === selectedVoiceURI)) ||
+          selectedVoiceRef.current ||
+          voices.find((v) => isAfricanVoice(v) && isMaleVoice(v)) ||
+          voices.find((v) => isMaleVoice(v) && v.lang.startsWith("en")) ||
+          voices.find((v) => isMaleVoice(v)) ||
+          voices[0];
 
-      if (activeVoice) {
-        utterance.voice = activeVoice;
-      }
+        if (activeVoice) utterance.voice = activeVoice;
 
-      utterance.onstart = () => {
+        utterance.onstart = () => {
+          setIsSpeaking(true);
+          setCurrentCaption(formatCaptionForDisplay(slide.script));
+        };
+
+        utterance.onend = () => {
+          setIsSpeaking(false);
+          if (autoAdvance && slideIndex < totalSlides - 1) {
+            setCurrentSlide((prev) => prev + 1);
+          } else if (slideIndex === totalSlides - 1) {
+            setIsAutoPlaying(false);
+          }
+        };
+
+        utterance.onerror = () => setIsSpeaking(false);
+        window.speechSynthesis.speak(utterance);
+      };
+
+      // Try pre-rendered studio MP3 audio file if present
+      const mp3Url = `/audio/pitchdeck/slide-${slideIndex + 1}.mp3`;
+      const audio = new Audio(mp3Url);
+
+      audio.oncanplaythrough = () => {
+        audioPlayerRef.current = audio;
         setIsSpeaking(true);
         setCurrentCaption(formatCaptionForDisplay(slide.script));
+        audio.play().catch(() => fallbackWebSpeech());
+        audio.onended = () => {
+          setIsSpeaking(false);
+          if (autoAdvance && slideIndex < totalSlides - 1) {
+            setCurrentSlide((prev) => prev + 1);
+          } else if (slideIndex === totalSlides - 1) {
+            setIsAutoPlaying(false);
+          }
+        };
       };
 
-      utterance.onend = () => {
-        setIsSpeaking(false);
-        if (autoAdvance && slideIndex < totalSlides - 1) {
-          setCurrentSlide((prev) => prev + 1);
-        } else if (slideIndex === totalSlides - 1) {
-          setIsAutoPlaying(false);
-        }
+      audio.onerror = () => {
+        fallbackWebSpeech();
       };
-
-      utterance.onerror = () => {
-        setIsSpeaking(false);
-      };
-
-      window.speechSynthesis.speak(utterance);
     },
     [isVoiceEnabled, selectedVoiceURI, totalSlides]
   );
@@ -392,6 +422,10 @@ export default function PitchDeckPage() {
     if (isAutoPlaying) {
       speakCurrentSlide(currentSlide, true);
     } else {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current.currentTime = 0;
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -403,6 +437,10 @@ export default function PitchDeckPage() {
   // Cleanup on unmount
   React.useEffect(() => {
     return () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.pause();
+        audioPlayerRef.current = null;
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
