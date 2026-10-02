@@ -519,9 +519,9 @@ export default function PitchDeckPage() {
               type="button"
               onClick={() => setIsAfricanVoiceGuideOpen(true)}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-bg-panel border border-accent-scan/40 hover:border-accent-scan text-accent-scan font-mono text-xs transition-colors cursor-pointer"
-              title="How to enable Nigerian/African system voice"
+              title="How to enable African system voice on macOS or Chrome"
             >
-              <span>🇳🇬 Add African Voice</span>
+              <span>🌍 Add African Voice</span>
               <HelpCircle className="h-3 w-3" />
             </button>
           )}
@@ -548,7 +548,7 @@ export default function PitchDeckPage() {
               >
                 {availableVoices.map((v) => (
                   <option key={v.voiceURI} value={v.voiceURI} className="bg-bg-panel text-text-primary">
-                    {isAfricanVoice(v) ? "🇳🇬 " : ""}{v.name} ({v.lang})
+                    {isAfricanVoice(v) ? (v.lang.toLowerCase().includes("za") ? "🇿🇦 " : "🇳🇬 ") : ""}{v.name} ({v.lang})
                   </option>
                 ))}
               </select>
@@ -777,7 +777,7 @@ export default function PitchDeckPage() {
           <div className="bg-bg-panel border border-border-hairline max-w-lg w-full rounded p-6 space-y-4 shadow-xl font-mono text-xs">
             <div className="flex items-center justify-between border-b border-border-hairline pb-3">
               <div className="flex items-center gap-2 text-accent-scan font-bold text-sm">
-                <span>🇳🇬 HOW TO ENABLE NIGERIAN/AFRICAN SYSTEM VOICE</span>
+                <span>🇿🇦 HOW TO ENABLE AFRICAN SYSTEM VOICE ON MAC</span>
               </div>
               <button
                 type="button"
@@ -790,7 +790,7 @@ export default function PitchDeckPage() {
 
             <div className="space-y-3 font-sans text-xs text-text-muted leading-relaxed">
               <p className="text-text-primary">
-                Your browser is currently using the system male voice fallback. You can enable Apple/Google's native Nigerian or African English voices in 10 seconds:
+                On macOS, Apple provides <strong>English (South Africa)</strong> voices directly in system settings:
               </p>
 
               <div className="p-3 rounded bg-bg-panel-raised border border-border-hairline space-y-2 font-mono text-[11px]">
@@ -799,15 +799,15 @@ export default function PitchDeckPage() {
                   <li>Open <strong>System Settings → Accessibility</strong></li>
                   <li>Click <strong>Spoken Content → System Voice</strong></li>
                   <li>Select <strong>Manage Voices...</strong></li>
-                  <li>Search <strong>English (Nigeria)</strong> or <strong>English (South Africa)</strong></li>
-                  <li>Click Download (Free) and select <strong>Ekaette</strong> or <strong>Lesedi</strong>!</li>
+                  <li>Scroll to <strong>English (South Africa)</strong></li>
+                  <li>Click the cloud download icon for <strong>Voice 1</strong> (Male) or <strong>Voice 2 / Tessa</strong>!</li>
                 </ol>
               </div>
 
               <div className="p-3 rounded bg-bg-panel-raised border border-border-hairline space-y-2 font-mono text-[11px]">
-                <div className="text-accent-scan font-bold">🌐 On Google Chrome / Android:</div>
+                <div className="text-accent-scan font-bold">🌐 On Google Chrome:</div>
                 <p className="text-text-primary">
-                  Chrome automatically includes <strong>Google English (Nigeria)</strong> when system locale or Google TTS pack is enabled.
+                  Google Chrome includes <strong>Google English (Nigeria)</strong> and <strong>Google English (South Africa)</strong> automatically in the voice selector dropdown above!
                 </p>
               </div>
             </div>
