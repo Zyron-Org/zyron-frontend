@@ -446,9 +446,8 @@ export default function LandingPage() {
             </Link>
             <Link
               href="/verify"
-              className="px-3 py-1.5 rounded-[4px] text-accent-scan hover:bg-accent-scan/10 transition-colors flex items-center gap-1 font-semibold"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
               Verify
             </Link>
           </nav>
@@ -545,13 +544,10 @@ export default function LandingPage() {
                 <Link
                   href="/verify"
                   onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between p-2.5 rounded-[4px] text-accent-scan hover:bg-accent-scan/10 transition-colors font-semibold"
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5" />
-                    Verify Attestation
-                  </span>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-accent-scan" />
+                  <span>Verify</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
                 </Link>
               </div>
 

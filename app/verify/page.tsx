@@ -4,32 +4,23 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
-  ShieldCheck,
-  ShieldAlert,
+  Terminal,
   Search,
-  FileText,
   Upload,
   Hash,
   FileCode,
-  CheckCircle2,
-  ExternalLink,
-  Copy,
   Check,
-  Terminal,
-  ArrowRight,
-  Lock,
-  RefreshCw,
-  AlertTriangle,
-  Layers,
-  Cpu,
-  Eye,
+  Copy,
+  ExternalLink,
   Download,
-  Fingerprint,
+  ArrowUpRight,
+  X,
+  RefreshCw,
   FileCheck2,
+  Lock,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
 import axios from "axios";
@@ -82,14 +73,18 @@ interface VerificationData {
 }
 
 export default function PublicVerifyPage() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || searchParams.get("id") || "";
 
+  const [mounted, setMounted] = React.useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   const [activeTab, setActiveTab] = React.useState<"search" | "upload" | "code">("search");
   const [searchQuery, setSearchQuery] = React.useState(initialQuery);
   const [solidityCode, setSolidityCode] = React.useState("");
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
   const [verificationResult, setVerificationResult] = React.useState<{
     verified: boolean;
     matchType?: string;
@@ -98,10 +93,22 @@ export default function PublicVerifyPage() {
     audit?: VerificationData;
   } | null>(null);
   const [recentAudits, setRecentAudits] = React.useState<VerificationData[]>([]);
-  const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
-  // Load recent verifications for quick-explore
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const isAuthenticated = mounted && !!user;
+  const dashboardHref = isAuthenticated
+    ? user?.role?.toUpperCase() === "AUDITOR"
+      ? "/auditor/queue"
+      : user?.role?.toUpperCase() === "ADMIN"
+      ? "/admin/users"
+      : "/portal"
+    : "/auth/login";
+
+  // Load recent verified attestations
   React.useEffect(() => {
     apiClient
       .get("/audits/verify/recent?limit=4")
@@ -113,7 +120,7 @@ export default function PublicVerifyPage() {
       .catch((err) => console.warn("Failed to load recent audits:", err));
   }, []);
 
-  // Run initial query if present in URL
+  // Run initial query if passed via query params
   React.useEffect(() => {
     if (initialQuery.trim()) {
       handleSearch(initialQuery.trim());
@@ -217,329 +224,479 @@ export default function PublicVerifyPage() {
   const audit = verificationResult?.audit;
 
   return (
-    <div className="min-h-screen bg-bg-void text-text-primary flex flex-col font-sans selection:bg-accent-scan/20 selection:text-accent-scan">
-      {/* Top Accent Gradient Line */}
-      <div className="h-1 w-full bg-gradient-to-r from-accent-scan via-emerald-500 to-sky-500" />
+    <div className="min-h-screen bg-bg-void text-text-primary selection:bg-accent-scan/20 selection:text-accent-scan relative overflow-x-hidden">
+      {/* Background Graphic matching Home Page */}
+      <div className="absolute top-0 left-0 w-full h-[650px] md:h-[800px] pointer-events-none z-0 overflow-hidden">
+        <img
+          src="/hero-bg.png"
+          alt=""
+          className="w-full h-full object-cover object-top dark:opacity-10 opacity-[0.03] [filter:hue-rotate(-75deg)_saturate(2)_brightness(1.1)] [mask-image:linear-gradient(to_bottom,black_65%,transparent_100%)]"
+        />
+      </div>
 
-      {/* Public Header */}
-      <header className="w-full border-b border-border-hairline bg-bg-panel/80 backdrop-blur-md sticky top-0 z-40">
-        <div className="max-w-[1400px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
+      {/* ========================================================================= */}
+      {/* HEADER: MATCHING HOME PAGE FLOATING NAVBAR                                */}
+      {/* ========================================================================= */}
+      <header className="w-full bg-transparent sticky top-0 z-50 backdrop-blur-sm">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-10 h-20 flex items-center justify-between">
+          {/* Left: Compact Zyron Brand & Logo */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex items-center justify-center h-8 w-8 rounded-[6px] bg-bg-void border border-border-hairline text-accent-scan group-hover:border-accent-scan transition-colors">
-              <Terminal className="h-4 w-4" />
+            <div className="flex items-center justify-center h-8 w-8 rounded-[4px] bg-bg-panel border border-border-hairline text-accent-scan group-hover:border-accent-scan transition-colors">
+              <Terminal className="h-4.5 w-4.5" />
             </div>
             <div className="flex items-center gap-2 font-mono tracking-wider">
               <span className="font-display font-bold text-sm text-text-primary tracking-wider">
                 ZYRON
               </span>
-              <span className="text-text-muted/60 font-light text-xs">|</span>
-              <span className="text-accent-scan font-semibold text-xs tracking-wider">
-                ATTESTATION REGISTRY
+              <span className="hidden sm:inline text-text-muted/60 font-light text-xs">|</span>
+              <span className="hidden sm:inline text-accent-scan font-medium text-xs tracking-wider">
+                AI AUDITOR
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          {/* Middle: Floating Center Navbar */}
+          <nav className="hidden lg:flex items-center gap-1 p-1 rounded-[6px] bg-bg-panel/90 border border-border-hairline backdrop-blur-md shadow-xl font-mono text-xs text-text-muted">
             <Link
-              href="/"
-              className="hidden sm:inline-flex text-xs font-mono text-text-muted hover:text-text-primary transition-colors px-2.5 py-1.5 rounded-[4px] hover:bg-bg-panel-raised"
+              href="/#features"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
             >
-              Platform
+              Features
             </Link>
             <Link
-              href="/portal"
-              className="text-xs font-mono text-text-muted hover:text-text-primary transition-colors px-2.5 py-1.5 rounded-[4px] hover:bg-bg-panel-raised"
+              href="/#how-it-works"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
             >
-              Dashboard
+              How It Works
             </Link>
+            <Link
+              href="/#ecosystem"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
+            >
+              Ecosystem
+            </Link>
+            <Link
+              href="/#pricing"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
+            >
+              Pricing
+            </Link>
+            <Link
+              href="/#faq"
+              className="px-3 py-1.5 rounded-[4px] hover:text-text-primary hover:bg-bg-panel-raised transition-colors"
+            >
+              FAQ
+            </Link>
+            <Link
+              href="/verify"
+              className="px-3 py-1.5 rounded-[4px] text-text-primary bg-bg-panel-raised font-semibold transition-colors"
+            >
+              Verify
+            </Link>
+          </nav>
+
+          {/* Right: Theme Toggle + Login / Dashboard Button + Mobile Hamburger */}
+          <div className="flex items-center gap-2.5">
             <ThemeToggle />
+
+            <Link href={dashboardHref}>
+              <button
+                type="button"
+                className="h-9 px-3.5 sm:px-4 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs hover:bg-accent-scan hover:text-white dark:hover:bg-white dark:hover:text-bg-void transition-colors flex items-center gap-1.5 shadow-sm font-mono cursor-pointer"
+              >
+                <span>{isAuthenticated ? "Dashboard" : "Sign In"}</span>
+                <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
+              </button>
+            </Link>
+
+            {/* Hamburger Button (mobile/tablet) */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden w-9 h-9 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-center text-text-muted hover:text-text-primary transition-colors cursor-pointer"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4 text-text-primary" /> : <Terminal className="h-4 w-4" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden px-4 pb-4 max-w-[1440px] mx-auto animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="p-3.5 rounded-[6px] bg-bg-panel/95 border border-border-hairline backdrop-blur-xl shadow-2xl space-y-2 font-mono text-xs">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between p-2 rounded-[4px] bg-bg-panel border border-border-hairline mb-2">
+                  <span className="text-text-muted font-bold">THEME</span>
+                  <ThemeToggle size="sm" showLabel />
+                </div>
+                <Link
+                  href={dashboardHref}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] bg-text-primary text-bg-void font-bold hover:bg-accent-scan hover:text-white transition-colors mb-2"
+                >
+                  <span>{isAuthenticated ? "Dashboard" : "Sign In"}</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 stroke-[2.5]" />
+                </Link>
+                <Link
+                  href="/#features"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
+                >
+                  <span>Features</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/#how-it-works"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
+                >
+                  <span>How It Works</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/#ecosystem"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
+                >
+                  <span>Ecosystem</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/#pricing"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
+                >
+                  <span>Pricing</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/#faq"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors"
+                >
+                  <span>FAQ</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+                <Link
+                  href="/verify"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-between p-2.5 rounded-[4px] text-text-primary hover:bg-bg-panel-raised transition-colors font-semibold"
+                >
+                  <span>Verify</span>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted" />
+                </Link>
+              </div>
+
+              <div className="pt-2 border-t border-border-hairline flex items-center justify-between text-[11px] text-text-muted px-1 font-mono">
+                <span className="text-[10px] text-text-muted">ZYRON_LABS_v2.6</span>
+                <span className="text-[10px] text-accent-scan">ATTESTATION_PORTAL</span>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
-      {/* Main Container */}
-      <main className="flex-1 max-w-[1200px] w-full mx-auto px-4 sm:px-8 py-10">
-        {/* Hero Section */}
+      {/* ========================================================================= */}
+      {/* MAIN BODY                                                                 */}
+      {/* ========================================================================= */}
+      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 pt-10 pb-24">
+        {/* Hero Title Area */}
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-scan/10 border border-accent-scan/20 text-accent-scan text-xs font-mono font-medium mb-4">
-            <Fingerprint className="w-3.5 h-3.5" />
-            Cryptographic Audit Attestation Registry
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-accent-scan text-xs font-mono font-medium mb-4 shadow-xs">
+            <Terminal className="w-3.5 h-3.5" />
+            <span>ATTESTATION_REGISTRY // EVM_ANCHORED</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-text-primary mb-3">
-            Verify Smart Contract Security Attestation
+          <h1 className="font-display font-bold text-3xl sm:text-5xl tracking-tight text-text-primary mb-3">
+            Verify Audit <span className="text-accent-scan">Attestation</span>
           </h1>
-          <p className="text-sm text-text-muted leading-relaxed">
-            Verify bytecode integrity, decentralized IPFS provenance, findings Merkle trees, and auditor sign-off.
+          <p className="font-sans text-sm sm:text-base text-text-muted leading-relaxed">
+            Verify bytecode integrity, decentralized IPFS CIDv1 provenance, findings Merkle trees, and auditor sign-off.
             Every certificate issued by Zyron is immutably anchored.
           </p>
         </div>
 
-        {/* Verification Input Box */}
-        <div className="bg-bg-panel border border-border-hairline rounded-xl shadow-lg p-5 sm:p-6 mb-8 backdrop-blur-sm">
-          {/* Mode Tabs */}
-          <div className="flex items-center gap-2 border-b border-border-hairline pb-4 mb-6 overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => setActiveTab("search")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
-                activeTab === "search"
-                  ? "bg-accent-scan text-white shadow-sm"
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
-              }`}
-            >
-              <Hash className="w-3.5 h-3.5" />
-              Identifier / Address / Hash
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("upload")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
-                activeTab === "upload"
-                  ? "bg-accent-scan text-white shadow-sm"
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
-              }`}
-            >
-              <Upload className="w-3.5 h-3.5" />
-              Upload Audit PDF
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("code")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-mono font-medium transition-all ${
-                activeTab === "code"
-                  ? "bg-accent-scan text-white shadow-sm"
-                  : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
-              }`}
-            >
-              <FileCode className="w-3.5 h-3.5" />
-              Solidity Code Digest
-            </button>
+        {/* Verification Terminal Card */}
+        <div className="bg-bg-panel/90 border border-border-hairline rounded-[6px] shadow-2xl backdrop-blur-md overflow-hidden mb-8">
+          {/* Terminal Window Header Bar */}
+          <div className="px-4 py-2.5 border-b border-border-hairline bg-bg-void/40 flex items-center justify-between text-[11px] font-mono text-text-muted">
+            <div className="flex items-center gap-2">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-border-hairline" />
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-border-hairline" />
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-border-hairline" />
+              <span className="ml-2 text-text-primary font-semibold">VERIFY_TERMINAL // v2.6.4</span>
+            </div>
+            <div className="hidden sm:block text-[10px] text-text-muted">
+              REGISTRY: ETHEREUM_MAINNET_EVM
+            </div>
           </div>
 
-          {/* Tab 1: Search Identifier / Address / Hash */}
-          {activeTab === "search" && (
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-2.5">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                    placeholder="Enter Ticket ID (e.g. ZYR-9485), Contract Address (0x...), Bytecode Hash, or IPFS CID..."
-                    className="w-full h-11 pl-10 pr-4 rounded-lg bg-bg-void border border-border-hairline text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent-scan transition-colors"
-                  />
-                </div>
-                <Button
-                  onClick={() => handleSearch()}
-                  disabled={isVerifying}
-                  className="h-11 px-6 bg-accent-scan hover:bg-accent-scan/90 text-white font-mono text-xs font-semibold rounded-lg shrink-0 flex items-center gap-2 cursor-pointer shadow-sm"
-                >
-                  {isVerifying ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      Verify Attestation
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Sample Explorers */}
-              <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
-                <span>Quick Test:</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery("ZYR-9485");
-                    handleSearch("ZYR-9485");
-                  }}
-                  className="px-2 py-0.5 rounded bg-bg-panel-raised hover:bg-accent-scan/10 hover:text-accent-scan border border-border-hairline text-[11px] transition-colors"
-                >
-                  Ticket: ZYR-9485
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const addr = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
-                    setSearchQuery(addr);
-                    handleSearch(addr);
-                  }}
-                  className="px-2 py-0.5 rounded bg-bg-panel-raised hover:bg-accent-scan/10 hover:text-accent-scan border border-border-hairline text-[11px] transition-colors"
-                >
-                  Contract: 0x5C69...aA6f
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const cid = "bafkreigx2uei2nkpot3qric2xce6yxjhtkzv5onobktsybqtdew332ppki";
-                    setSearchQuery(cid);
-                    handleSearch(cid);
-                  }}
-                  className="px-2 py-0.5 rounded bg-bg-panel-raised hover:bg-accent-scan/10 hover:text-accent-scan border border-border-hairline text-[11px] transition-colors"
-                >
-                  IPFS CIDv1
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Tab 2: Upload Audit PDF */}
-          {activeTab === "upload" && (
-            <div className="space-y-4">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".pdf,application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) handleFileUpload(file);
-                }}
-              />
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border-hairline hover:border-accent-scan rounded-xl p-8 text-center cursor-pointer transition-colors bg-bg-void/50 hover:bg-accent-scan/5 flex flex-col items-center justify-center gap-3 group"
+          <div className="p-5 sm:p-6">
+            {/* Mode Switcher Tabs */}
+            <div className="flex items-center gap-1.5 border-b border-border-hairline pb-4 mb-5 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => setActiveTab("search")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[4px] text-xs font-mono font-semibold transition-colors cursor-pointer ${
+                  activeTab === "search"
+                    ? "bg-text-primary text-bg-void shadow-xs"
+                    : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
+                }`}
               >
-                <div className="w-12 h-12 rounded-full bg-bg-panel border border-border-hairline flex items-center justify-center text-accent-scan group-hover:scale-110 transition-transform">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <div>
-                  <p className="text-xs font-mono font-semibold text-text-primary mb-1">
-                    {selectedFile ? selectedFile.name : "Click or drag & drop an Audit Report PDF"}
-                  </p>
-                  <p className="text-[11px] text-text-muted">
-                    We will calculate the cryptographic SHA-256 digest &amp; CIDv1 to verify against our decentralized attestation registry.
-                  </p>
-                </div>
-                {selectedFile && (
-                  <span className="text-[10px] font-mono text-accent-scan bg-accent-scan/10 px-2 py-0.5 rounded">
-                    {(selectedFile.size / 1024).toFixed(1)} KB · Ready to verify
-                  </span>
-                )}
-              </div>
+                <Hash className="w-3.5 h-3.5" />
+                Identifier / Hash / Address
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("upload")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[4px] text-xs font-mono font-semibold transition-colors cursor-pointer ${
+                  activeTab === "upload"
+                    ? "bg-text-primary text-bg-void shadow-xs"
+                    : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
+                }`}
+              >
+                <Upload className="w-3.5 h-3.5" />
+                Upload Audit PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("code")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-[4px] text-xs font-mono font-semibold transition-colors cursor-pointer ${
+                  activeTab === "code"
+                    ? "bg-text-primary text-bg-void shadow-xs"
+                    : "text-text-muted hover:text-text-primary hover:bg-bg-panel-raised"
+                }`}
+              >
+                <FileCode className="w-3.5 h-3.5" />
+                Solidity Code Digest
+              </button>
+            </div>
 
-              {selectedFile && (
-                <div className="flex justify-end">
-                  <Button
-                    onClick={() => handleFileUpload(selectedFile)}
+            {/* Tab 1: Search Identifier / Address / Hash */}
+            {activeTab === "search" && (
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                      placeholder="Ticket ID (ZYR-9485), Contract Address (0x...), Bytecode Hash, or IPFS CID..."
+                      className="w-full h-11 pl-10 pr-4 rounded-[4px] bg-bg-void border border-border-hairline text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent-scan transition-colors"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleSearch()}
                     disabled={isVerifying}
-                    className="h-10 px-5 bg-accent-scan hover:bg-accent-scan/90 text-white font-mono text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer"
+                    className="h-11 px-5 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors cursor-pointer flex items-center justify-center gap-2 shrink-0 shadow-sm disabled:opacity-50"
                   >
                     {isVerifying ? (
                       <>
                         <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                        Verifying Document...
+                        <span>Verifying...</span>
                       </>
                     ) : (
                       <>
-                        <FileCheck2 className="w-4 h-4" />
-                        Verify Document Integrity
+                        <Terminal className="w-3.5 h-3.5" />
+                        <span>Verify Record</span>
                       </>
                     )}
-                  </Button>
+                  </button>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Tab 3: Solidity Code Digest */}
-          {activeTab === "code" && (
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-mono font-medium text-text-muted flex items-center gap-1.5">
-                  <FileCode className="w-3.5 h-3.5 text-accent-scan" />
-                  Paste Smart Contract Source Code
-                </label>
-                <textarea
-                  value={solidityCode}
-                  onChange={(e) => setSolidityCode(e.target.value)}
-                  rows={8}
-                  placeholder="// Paste complete Solidity source code here..."
-                  className="w-full p-3.5 rounded-lg bg-bg-void border border-border-hairline text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent-scan transition-colors"
+                {/* Quick Test Explorers */}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-text-muted font-mono pt-1">
+                  <span>Quick Test:</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("ZYR-9485");
+                      handleSearch("ZYR-9485");
+                    }}
+                    className="px-2 py-0.5 rounded-[4px] bg-bg-void hover:bg-bg-panel-raised border border-border-hairline text-[11px] text-text-primary hover:border-accent-scan transition-colors cursor-pointer"
+                  >
+                    Ticket: ZYR-9485
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const addr = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
+                      setSearchQuery(addr);
+                      handleSearch(addr);
+                    }}
+                    className="px-2 py-0.5 rounded-[4px] bg-bg-void hover:bg-bg-panel-raised border border-border-hairline text-[11px] text-text-primary hover:border-accent-scan transition-colors cursor-pointer"
+                  >
+                    Address: 0x5C69...aA6f
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const cid = "bafkreigx2uei2nkpot3qric2xce6yxjhtkzv5onobktsybqtdew332ppki";
+                      setSearchQuery(cid);
+                      handleSearch(cid);
+                    }}
+                    className="px-2 py-0.5 rounded-[4px] bg-bg-void hover:bg-bg-panel-raised border border-border-hairline text-[11px] text-text-primary hover:border-accent-scan transition-colors cursor-pointer"
+                  >
+                    IPFS CIDv1
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: Upload Audit PDF */}
+            {activeTab === "upload" && (
+              <div className="space-y-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFileUpload(file);
+                  }}
                 />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] text-text-muted font-mono">
-                  Calculates SHA-256 and Keccak-256 bytecode digests to find matching audits.
-                </p>
-                <Button
-                  onClick={handleCodeVerify}
-                  disabled={isVerifying || !solidityCode.trim()}
-                  className="h-10 px-5 bg-accent-scan hover:bg-accent-scan/90 text-white font-mono text-xs font-semibold rounded-lg flex items-center gap-2 cursor-pointer"
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border border-dashed border-border-hairline hover:border-accent-scan rounded-[4px] p-8 text-center cursor-pointer transition-colors bg-bg-void/40 flex flex-col items-center justify-center gap-2.5 group"
                 >
-                  {isVerifying ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      Computing Digest...
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheck className="w-4 h-4" />
-                      Verify Code Digest
-                    </>
+                  <div className="w-10 h-10 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-center text-accent-scan group-hover:scale-105 transition-transform">
+                    <Upload className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-mono font-semibold text-text-primary">
+                      {selectedFile ? selectedFile.name : "Select or drag & drop an Audit Report PDF"}
+                    </p>
+                    <p className="text-[11px] text-text-muted mt-0.5">
+                      Calculates the cryptographic SHA-256 digest &amp; CIDv1 to verify against the attestation registry.
+                    </p>
+                  </div>
+                  {selectedFile && (
+                    <span className="text-[10px] font-mono text-accent-scan bg-accent-scan/10 px-2 py-0.5 rounded-[4px]">
+                      {(selectedFile.size / 1024).toFixed(1)} KB · Ready to verify
+                    </span>
                   )}
-                </Button>
+                </div>
+
+                {selectedFile && (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={() => handleFileUpload(selectedFile)}
+                      disabled={isVerifying}
+                      className="h-9 px-4 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                    >
+                      {isVerifying ? (
+                        <>
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                          <span>Verifying Document...</span>
+                        </>
+                      ) : (
+                        <>
+                          <FileCheck2 className="w-3.5 h-3.5" />
+                          <span>Verify Document Integrity</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
+
+            {/* Tab 3: Solidity Code Digest */}
+            {activeTab === "code" && (
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+                    <span className="flex items-center gap-1.5">
+                      <FileCode className="w-3.5 h-3.5 text-accent-scan" />
+                      Paste Smart Contract Source Code
+                    </span>
+                    <span className="text-[10px]">Solidity ^0.8.x</span>
+                  </div>
+                  <textarea
+                    value={solidityCode}
+                    onChange={(e) => setSolidityCode(e.target.value)}
+                    rows={8}
+                    placeholder="// Paste complete Solidity source code here..."
+                    className="w-full p-3.5 rounded-[4px] bg-bg-void border border-border-hairline text-xs font-mono text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent-scan transition-colors"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-text-muted font-mono">
+                    Computes SHA-256 and Keccak-256 bytecode digests to find matching audits.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleCodeVerify}
+                    disabled={isVerifying || !solidityCode.trim()}
+                    className="h-9 px-4 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  >
+                    {isVerifying ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Computing Digest...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Terminal className="w-3.5 h-3.5" />
+                        <span>Verify Code Digest</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Verification Results View */}
+        {/* Verification Results Display */}
         {verificationResult && (
           <div className="mb-12">
             {verificationResult.verified && audit ? (
-              <div className="border border-emerald-500/30 rounded-xl bg-bg-panel shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300">
+              <div className="border border-border-hairline rounded-[6px] bg-bg-panel shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
                 {/* Verified Header Banner */}
-                <div className="bg-gradient-to-r from-emerald-500/15 via-accent-scan/10 to-transparent border-b border-emerald-500/20 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                      <ShieldCheck className="w-6 h-6" />
+                <div className="border-b border-border-hairline bg-bg-void/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-accent-scan animate-pulse" />
+                      <h2 className="text-sm font-bold text-text-primary font-mono tracking-wider">
+                        CRYPTOGRAPHIC ATTESTATION CONFIRMED
+                      </h2>
+                      <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-bold bg-bg-panel border border-border-hairline text-accent-scan">
+                        {verificationResult.matchType || "OFFICIAL_RECORD"}
+                      </span>
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h2 className="text-base font-bold text-text-primary font-display">
-                          CRYPTOGRAPHICALLY VERIFIED AUTHENTIC
-                        </h2>
-                        <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                          {verificationResult.matchType || "OFFICIAL RECORD"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-text-muted font-mono mt-0.5">
-                        {verificationResult.matchDetail || "Verified against Zyron Security decentralized registry"}
-                      </p>
-                    </div>
+                    <p className="text-xs text-text-muted font-mono mt-0.5">
+                      {verificationResult.matchDetail || "Verified against Zyron Security decentralized registry"}
+                    </p>
                   </div>
 
-                  <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <a
-                      href={audit.cryptography.reportUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white font-mono text-xs font-semibold flex items-center gap-1.5 shadow-sm transition-colors"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Download Certified PDF
-                    </a>
-                  </div>
+                  <a
+                    href={audit.cryptography.reportUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-8 px-3.5 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors flex items-center gap-1.5 self-start sm:self-auto shadow-sm"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>Download Report PDF</span>
+                  </a>
                 </div>
 
-                {/* Body Content */}
+                {/* Scope & Details */}
                 <div className="p-6 space-y-6">
                   {/* Protocol Overview Hero */}
-                  <div className="bg-bg-void border border-border-hairline rounded-lg p-5">
+                  <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 sm:p-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                       <div>
-                        <span className="text-[11px] font-mono text-text-muted uppercase tracking-wider">
-                          Audited Protocol &amp; Contract
-                        </span>
-                        <h3 className="text-xl font-bold text-text-primary mt-0.5">
+                        <div className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                          Scope &amp; Protocol Verification
+                        </div>
+                        <h3 className="text-lg font-bold text-text-primary font-display mt-0.5">
                           {audit.protocolName}
                         </h3>
                         <p className="text-xs font-mono text-accent-scan mt-0.5">
@@ -548,11 +705,11 @@ export default function PublicVerifyPage() {
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2.5 py-1 rounded bg-bg-panel border border-border-hairline text-xs font-mono text-text-muted">
+                        <span className="px-2.5 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-xs font-mono text-text-muted">
                           Ticket: <strong className="text-text-primary">{audit.id}</strong>
                         </span>
-                        <span className="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-xs font-mono text-emerald-400 font-semibold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span className="px-2.5 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-xs font-mono text-accent-scan font-semibold flex items-center gap-1">
+                          <Check className="w-3.5 h-3.5" />
                           Passed Remediation
                         </span>
                       </div>
@@ -568,7 +725,7 @@ export default function PublicVerifyPage() {
                         <div className="text-text-primary font-semibold mt-0.5">{audit.compilerVersion}</div>
                       </div>
                       <div>
-                        <div className="text-[10px] text-text-muted uppercase">Source Lines (SLOC)</div>
+                        <div className="text-[10px] text-text-muted uppercase">Source Lines</div>
                         <div className="text-text-primary font-semibold mt-0.5">{audit.sloc} LOC</div>
                       </div>
                       <div>
@@ -586,14 +743,14 @@ export default function PublicVerifyPage() {
                     </div>
 
                     {audit.contractAddress && (
-                      <div className="mt-3 pt-3 border-t border-border-hairline flex items-center justify-between text-xs font-mono">
+                      <div className="mt-3 pt-3 border-t border-border-hairline flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono gap-1">
                         <span className="text-text-muted">Verified Contract Address:</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-accent-scan">{audit.contractAddress}</span>
+                          <span className="text-accent-scan break-all">{audit.contractAddress}</span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(audit.contractAddress!, "contract")}
-                            className="p-1 hover:bg-bg-panel rounded text-text-muted hover:text-text-primary"
+                            className="p-1 hover:bg-bg-panel rounded text-text-muted hover:text-text-primary cursor-pointer shrink-0"
                           >
                             {copiedKey === "contract" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
@@ -602,10 +759,10 @@ export default function PublicVerifyPage() {
                     )}
                   </div>
 
-                  {/* Cryptographic Proof Vault (2 Column) */}
+                  {/* Cryptographic Proofs (2 Columns) */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* Left: Bytecode & Merkle */}
-                    <div className="bg-bg-void border border-border-hairline rounded-lg p-4 space-y-3 font-mono text-xs">
+                    <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
                       <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
                         <Lock className="w-3.5 h-3.5 text-accent-scan" />
                         On-Chain Cryptographic Proofs
@@ -613,14 +770,14 @@ export default function PublicVerifyPage() {
 
                       <div>
                         <div className="text-[10px] text-text-muted uppercase">Source Bytecode SHA-256 Digest</div>
-                        <div className="mt-1 p-2 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                        <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
                           <span className="text-[11px] text-accent-scan break-all">
                             {audit.cryptography.bytecodeHash || "0x98f4a3c2..."}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(audit.cryptography.bytecodeHash || "", "bytecode")}
-                            className="text-text-muted hover:text-text-primary shrink-0"
+                            className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
                           >
                             {copiedKey === "bytecode" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
@@ -630,14 +787,14 @@ export default function PublicVerifyPage() {
                       {audit.cryptography.merkleRoot && (
                         <div>
                           <div className="text-[10px] text-text-muted uppercase">Findings Merkle Root</div>
-                          <div className="mt-1 p-2 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                            <span className="text-[11px] text-sky-400 break-all">
+                          <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                            <span className="text-[11px] text-text-primary break-all">
                               {audit.cryptography.merkleRoot}
                             </span>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(audit.cryptography.merkleRoot || "", "merkle")}
-                              className="text-text-muted hover:text-text-primary shrink-0"
+                              className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
                             >
                               {copiedKey === "merkle" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
@@ -648,14 +805,14 @@ export default function PublicVerifyPage() {
                       {audit.cryptography.onChainTxHash && (
                         <div>
                           <div className="text-[10px] text-text-muted uppercase">On-Chain Attestation Tx</div>
-                          <div className="mt-1 p-2 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                            <span className="text-[11px] text-emerald-400 break-all">
+                          <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                            <span className="text-[11px] text-text-primary break-all">
                               {audit.cryptography.onChainTxHash}
                             </span>
                             <button
                               type="button"
                               onClick={() => copyToClipboard(audit.cryptography.onChainTxHash || "", "tx")}
-                              className="text-text-muted hover:text-text-primary shrink-0"
+                              className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
                             >
                               {copiedKey === "tx" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
@@ -664,23 +821,23 @@ export default function PublicVerifyPage() {
                       )}
                     </div>
 
-                    {/* Right: IPFS Decentralized Provenance */}
-                    <div className="bg-bg-void border border-border-hairline rounded-lg p-4 space-y-3 font-mono text-xs">
+                    {/* Right: IPFS Decentralized Storage */}
+                    <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
                       <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
-                        <Fingerprint className="w-3.5 h-3.5 text-sky-400" />
+                        <Terminal className="w-3.5 h-3.5 text-accent-scan" />
                         Decentralized IPFS Storage
                       </div>
 
                       <div>
                         <div className="text-[10px] text-text-muted uppercase">RFC CIDv1 Base32 Multihash</div>
-                        <div className="mt-1 p-2 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                          <span className="text-[11px] text-sky-400 break-all">
+                        <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                          <span className="text-[11px] text-accent-scan break-all">
                             {audit.cryptography.ipfsCid || "bafkrei..."}
                           </span>
                           <button
                             type="button"
                             onClick={() => copyToClipboard(audit.cryptography.ipfsCid || "", "cid")}
-                            className="text-text-muted hover:text-text-primary shrink-0"
+                            className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
                           >
                             {copiedKey === "cid" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                           </button>
@@ -693,7 +850,7 @@ export default function PublicVerifyPage() {
                           href={audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-1 p-2 rounded bg-bg-panel border border-border-hairline flex items-center justify-between gap-2 text-[11px] text-accent-scan hover:text-emerald-300 transition-colors"
+                          className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2 text-[11px] text-text-primary hover:text-accent-scan transition-colors"
                         >
                           <span className="truncate">{audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}</span>
                           <ExternalLink className="w-3.5 h-3.5 shrink-0" />
@@ -708,29 +865,29 @@ export default function PublicVerifyPage() {
 
                   {/* Summary Severity Stats */}
                   <div>
-                    <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted mb-3">
-                      Executive Finding Metrics
-                    </h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 font-mono">
-                      <div className="p-3 rounded-lg bg-bg-void border border-border-hairline text-center border-t-2 border-t-red-500">
-                        <div className="text-xl font-bold text-red-400">{audit.summary.critical}</div>
+                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted mb-2">
+                      Finding Metrics &amp; Remediation
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 font-mono">
+                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                        <div className="text-xl font-bold text-text-primary">{audit.summary.critical}</div>
                         <div className="text-[10px] text-text-muted uppercase mt-0.5">Critical</div>
                       </div>
-                      <div className="p-3 rounded-lg bg-bg-void border border-border-hairline text-center border-t-2 border-t-orange-500">
-                        <div className="text-xl font-bold text-orange-400">{audit.summary.high}</div>
+                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                        <div className="text-xl font-bold text-text-primary">{audit.summary.high}</div>
                         <div className="text-[10px] text-text-muted uppercase mt-0.5">High</div>
                       </div>
-                      <div className="p-3 rounded-lg bg-bg-void border border-border-hairline text-center border-t-2 border-t-amber-500">
-                        <div className="text-xl font-bold text-amber-400">{audit.summary.medium}</div>
+                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                        <div className="text-xl font-bold text-text-primary">{audit.summary.medium}</div>
                         <div className="text-[10px] text-text-muted uppercase mt-0.5">Medium</div>
                       </div>
-                      <div className="p-3 rounded-lg bg-bg-void border border-border-hairline text-center border-t-2 border-t-sky-500">
-                        <div className="text-xl font-bold text-sky-400">{audit.summary.low}</div>
+                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                        <div className="text-xl font-bold text-text-primary">{audit.summary.low}</div>
                         <div className="text-[10px] text-text-muted uppercase mt-0.5">Low / Gas</div>
                       </div>
-                      <div className="p-3 rounded-lg bg-bg-void border border-border-hairline text-center border-t-2 border-t-emerald-500 bg-emerald-500/5">
-                        <div className="text-xl font-bold text-emerald-400">{audit.summary.resolved}</div>
-                        <div className="text-[10px] text-emerald-400 uppercase mt-0.5 font-bold">100% Remediated</div>
+                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                        <div className="text-xl font-bold text-accent-scan">{audit.summary.resolved}</div>
+                        <div className="text-[10px] text-accent-scan uppercase mt-0.5 font-bold">100% Remediated</div>
                       </div>
                     </div>
                   </div>
@@ -738,35 +895,27 @@ export default function PublicVerifyPage() {
                   {/* Detailed Findings List */}
                   {audit.findings && audit.findings.length > 0 && (
                     <div className="space-y-3 pt-2">
-                      <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted">
+                      <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
                         Certified Vulnerabilities &amp; Verified Patches ({audit.findings.length})
-                      </h4>
-                      <div className="space-y-3">
+                      </div>
+                      <div className="space-y-2.5">
                         {audit.findings.map((f, idx) => (
                           <div
                             key={idx}
-                            className="bg-bg-void border border-border-hairline rounded-lg p-4 font-mono text-xs space-y-2"
+                            className="bg-bg-void border border-border-hairline rounded-[4px] p-3.5 font-mono text-xs space-y-2"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <div className="flex items-center gap-2">
-                                <span className="px-2 py-0.5 rounded bg-bg-panel text-text-primary text-[10px] font-bold border border-border-hairline">
+                                <span className="px-2 py-0.5 rounded-[4px] bg-bg-panel text-text-primary text-[10px] font-bold border border-border-hairline">
                                   {f.displayId}
                                 </span>
                                 <span className="font-bold text-text-primary text-xs">{f.title}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                    f.severity === "CRITICAL"
-                                      ? "bg-red-500/10 text-red-400 border border-red-500/30"
-                                      : f.severity === "HIGH"
-                                      ? "bg-orange-500/10 text-orange-400 border border-orange-500/30"
-                                      : "bg-amber-500/10 text-amber-400 border border-amber-500/30"
-                                  }`}
-                                >
+                                <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold uppercase bg-bg-panel border border-border-hairline text-text-muted">
                                   {f.severity}
                                 </span>
-                                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                                <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-bold bg-bg-panel border border-border-hairline text-accent-scan flex items-center gap-1">
                                   <Check className="w-3 h-3" />
                                   RESOLVED
                                 </span>
@@ -774,15 +923,19 @@ export default function PublicVerifyPage() {
                             </div>
 
                             {f.impact && (
-                              <div className="p-2.5 rounded bg-red-500/5 border-l-2 border-l-red-500 text-[11px] text-red-300">
-                                <strong className="text-red-400 uppercase text-[10px] block mb-0.5">Impact:</strong>
+                              <div className="p-2.5 rounded-[4px] bg-bg-panel border border-border-hairline text-[11px] text-text-muted">
+                                <strong className="text-text-primary uppercase text-[10px] block mb-0.5 font-mono">
+                                  Impact Vector:
+                                </strong>
                                 {f.impact}
                               </div>
                             )}
 
                             {f.remediationNote && (
-                              <div className="p-2.5 rounded bg-emerald-500/5 border-l-2 border-l-emerald-500 text-[11px] text-emerald-300">
-                                <strong className="text-emerald-400 uppercase text-[10px] block mb-0.5">Auditor Verification:</strong>
+                              <div className="p-2.5 rounded-[4px] bg-bg-panel border border-border-hairline text-[11px] text-accent-scan">
+                                <strong className="text-text-primary uppercase text-[10px] block mb-0.5 font-mono">
+                                  Auditor Verification:
+                                </strong>
                                 {f.remediationNote}
                               </div>
                             )}
@@ -795,19 +948,19 @@ export default function PublicVerifyPage() {
               </div>
             ) : (
               /* Unverified / Not Found Banner */
-              <div className="border border-red-500/30 rounded-xl bg-bg-panel p-6 sm:p-8 shadow-xl text-center space-y-3 animate-in fade-in duration-300">
-                <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mx-auto">
-                  <ShieldAlert className="w-6 h-6" />
+              <div className="border border-border-hairline rounded-[6px] bg-bg-panel p-6 sm:p-8 shadow-xl text-center space-y-3 animate-in fade-in duration-200">
+                <div className="w-10 h-10 rounded-[4px] bg-bg-void border border-border-hairline flex items-center justify-center text-text-muted mx-auto">
+                  <X className="w-5 h-5 text-red-500" />
                 </div>
-                <h3 className="text-lg font-bold text-red-400 font-display">
-                  UNRECOGNIZED / UNVERIFIED ATTESTATION
+                <h3 className="text-base font-bold text-text-primary font-mono">
+                  UNRECOGNIZED ATTESTATION RECORD
                 </h3>
-                <p className="text-xs text-text-muted max-w-lg mx-auto leading-relaxed">
+                <p className="text-xs text-text-muted max-w-lg mx-auto leading-relaxed font-sans">
                   {verificationResult.message ||
                     "No certified audit attestation matching this query or file hash was found in the Zyron decentralized registry."}
                 </p>
                 <div className="pt-2 text-xs font-mono text-text-muted">
-                  Double check the Ticket ID (e.g. <code>ZYR-9485</code>), contract address, or ensure the PDF is an unmodified original document.
+                  Double check the Ticket ID (e.g. <code className="text-text-primary">ZYR-9485</code>), contract address, or ensure the PDF is an unmodified original document.
                 </div>
               </div>
             )}
@@ -816,16 +969,16 @@ export default function PublicVerifyPage() {
 
         {/* Recent Publicly Certified Audits Explorer */}
         {recentAudits.length > 0 && (
-          <div className="mt-12 space-y-4">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-accent-scan" />
-                Recently Verified Audits on Zyron
+              <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
+                <Terminal className="w-3.5 h-3.5 text-accent-scan" />
+                Recently Certified Audits on Zyron
               </h3>
-              <span className="text-xs font-mono text-text-muted">Public Attestation Registry</span>
+              <span className="text-[11px] font-mono text-text-muted">Immutable Attestation Registry</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {recentAudits.map((item, idx) => (
                 <div
                   key={idx}
@@ -833,35 +986,35 @@ export default function PublicVerifyPage() {
                     setSearchQuery(item.id);
                     handleSearch(item.id);
                   }}
-                  className="bg-bg-panel border border-border-hairline hover:border-accent-scan/50 rounded-xl p-4 cursor-pointer transition-all hover:shadow-md group"
+                  className="bg-bg-panel border border-border-hairline hover:border-accent-scan rounded-[4px] p-4 cursor-pointer transition-colors group"
                 >
                   <div className="flex items-start justify-between gap-3 mb-2">
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded bg-bg-void border border-border-hairline text-[10px] font-mono font-bold text-text-primary">
+                        <span className="px-2 py-0.5 rounded-[4px] bg-bg-void border border-border-hairline text-[10px] font-mono font-bold text-text-primary">
                           {item.id}
                         </span>
-                        <h4 className="text-sm font-bold text-text-primary group-hover:text-accent-scan transition-colors">
+                        <h4 className="text-xs font-bold text-text-primary font-mono group-hover:text-accent-scan transition-colors">
                           {item.protocolName}
                         </h4>
                       </div>
-                      <p className="text-xs font-mono text-text-muted mt-0.5">
+                      <p className="text-[11px] font-mono text-text-muted mt-0.5">
                         {item.contractFileName}
                       </p>
                     </div>
 
-                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-semibold flex items-center gap-1 shrink-0">
+                    <span className="px-2 py-0.5 rounded-[4px] bg-bg-void border border-border-hairline text-[10px] font-mono text-accent-scan font-semibold flex items-center gap-1 shrink-0">
                       <Check className="w-3 h-3" />
                       VERIFIED
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-mono text-text-muted pt-2 border-t border-border-hairline">
-                    <span className="truncate max-w-[200px]">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-text-muted pt-2 border-t border-border-hairline">
+                    <span className="truncate max-w-[220px]">
                       CID: {(item.cryptography?.ipfsCid || "bafkrei...").slice(0, 16)}...
                     </span>
-                    <span className="text-accent-scan flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                      Verify Proof <ArrowRight className="w-3 h-3" />
+                    <span className="text-text-primary group-hover:text-accent-scan flex items-center gap-1 transition-colors">
+                      Verify Attestation <ArrowUpRight className="w-3 h-3" />
                     </span>
                   </div>
                 </div>
@@ -871,11 +1024,84 @@ export default function PublicVerifyPage() {
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border-hairline bg-bg-panel py-6 text-center text-xs font-mono text-text-muted">
-        <div className="max-w-[1400px] mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span>Zyron Security Labs · Public Attestation Registry</span>
-          <span>Anchored to EVM Smart Contracts &amp; IPFS CIDv1</span>
+      {/* ========================================================================= */}
+      {/* INSTITUTIONAL FOOTER (IDENTICAL TO HOME PAGE)                            */}
+      {/* ========================================================================= */}
+      <footer className="pt-20 pb-12 px-6 md:px-12 border-t border-border-hairline bg-bg-void text-text-muted relative overflow-hidden">
+        {/* Subtle Ambient Nebula Glow */}
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_80%_60%_at_50%_110%,rgba(94,200,255,0.09),rgba(130,80,220,0.06),transparent_70%)] dark:opacity-100 opacity-40" />
+
+        <div className="max-w-7xl mx-auto space-y-16 relative z-10">
+          {/* Top Bar: Contact Info + Navigation Links */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-8 pb-6">
+            {/* Contact Info */}
+            <div className="space-y-1">
+              <div className="text-text-muted/70 text-xs font-mono">
+                Contact Zyron Security at:
+              </div>
+              <a
+                href="mailto:security@zyron.io"
+                className="text-text-primary hover:text-accent-scan transition-colors font-mono text-sm sm:text-base font-semibold inline-flex items-center gap-1.5"
+              >
+                <span>security@zyron.io</span>
+                <span className="text-xs">↗</span>
+              </a>
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="flex flex-wrap items-center gap-6 sm:gap-8 font-sans text-xs sm:text-sm text-text-muted">
+              <Link href="/#how-it-works" className="hover:text-text-primary transition-colors">
+                How It Works
+              </Link>
+              <Link href="/#pricing" className="hover:text-text-primary transition-colors">
+                Pricing
+              </Link>
+              <Link href="/#faq" className="hover:text-text-primary transition-colors">
+                FAQ
+              </Link>
+              <Link href="/portal" className="hover:text-text-primary transition-colors">
+                Client Portal
+              </Link>
+              <Link href="/verify" className="text-text-primary font-semibold transition-colors">
+                Verify Attestation
+              </Link>
+            </nav>
+          </div>
+
+          {/* Giant Centered Brand Wordmark & Icon matching Home Page */}
+          <div className="py-8 sm:py-12 md:py-16 flex items-center justify-center select-none">
+            <div className="w-full flex items-center justify-between gap-4 sm:gap-8">
+              <div className="h-12 w-12 sm:h-20 sm:w-20 md:h-28 md:w-28 lg:h-36 lg:w-36 shrink-0 rounded-[12px] sm:rounded-[20px] lg:rounded-[28px] bg-bg-panel border border-border-hairline flex items-center justify-center p-2.5 sm:p-4 md:p-6 lg:p-8 shadow-xl">
+                <Terminal className="w-full h-full text-accent-scan stroke-[2.5]" />
+              </div>
+
+              <span className="font-display text-[14vw] font-bold tracking-tight text-text-primary leading-none lowercase sm:lowercase">
+                zyron
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom Row: Copyright + Social Links */}
+          <div className="pt-6 border-t border-border-hairline flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] text-text-muted/80">
+            <div>
+              © 2026 Zyron Protocol Inc. All rights reserved.
+            </div>
+
+            <div className="flex flex-wrap items-center gap-6">
+              <Link href="https://twitter.com" target="_blank" className="hover:text-text-primary transition-colors">
+                Twitter / X
+              </Link>
+              <Link href="https://github.com" target="_blank" className="hover:text-text-primary transition-colors">
+                GitHub
+              </Link>
+              <Link href="https://discord.com" target="_blank" className="hover:text-text-primary transition-colors">
+                Discord
+              </Link>
+              <Link href="#" className="hover:text-text-primary transition-colors">
+                Security Disclosure
+              </Link>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
