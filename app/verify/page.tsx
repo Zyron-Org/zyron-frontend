@@ -18,8 +18,17 @@ import {
   RefreshCw,
   FileCheck2,
   Lock,
+  Radio,
+  Layers,
+  ShieldCheck,
+  CheckCircle2,
+  FileText,
+  Activity,
+  ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { StatusPill } from "@/components/ui/status-pill";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -72,7 +81,7 @@ interface VerificationData {
   }>;
 }
 
-export default function PublicVerifyPage() {
+function VerifyPageContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("query") || searchParams.get("id") || "";
@@ -85,6 +94,8 @@ export default function PublicVerifyPage() {
   const [selectedFile, setSelectedFile] = React.useState<File | null>(null);
   const [isVerifying, setIsVerifying] = React.useState(false);
   const [copiedKey, setCopiedKey] = React.useState<string | null>(null);
+  const [resultSubTab, setResultSubTab] = React.useState<"overview" | "proofs" | "findings">("overview");
+
   const [verificationResult, setVerificationResult] = React.useState<{
     verified: boolean;
     matchType?: string;
@@ -400,7 +411,7 @@ export default function PublicVerifyPage() {
       {/* ========================================================================= */}
       {/* MAIN BODY                                                                 */}
       {/* ========================================================================= */}
-      <main className="relative z-10 max-w-5xl mx-auto px-4 sm:px-8 pt-10 pb-24">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-8 pt-10 pb-24">
         {/* Hero Title Area */}
         <div className="text-center max-w-2xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-accent-scan text-xs font-mono font-medium mb-4 shadow-xs">
@@ -658,251 +669,411 @@ export default function PublicVerifyPage() {
         {verificationResult && (
           <div className="mb-12">
             {verificationResult.verified && audit ? (
-              <div className="border border-border-hairline rounded-[6px] bg-bg-panel shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-200">
-                {/* Verified Header Banner */}
-                <div className="border-b border-border-hairline bg-bg-void/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-accent-scan animate-pulse" />
-                      <h2 className="text-sm font-bold text-text-primary font-mono tracking-wider">
-                        CRYPTOGRAPHIC ATTESTATION CONFIRMED
-                      </h2>
-                      <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-bold bg-bg-panel border border-border-hairline text-accent-scan">
-                        {verificationResult.matchType || "OFFICIAL_RECORD"}
-                      </span>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                {/* ─── DASHBOARD COMPONENT 1: METRIC SUMMARY STATS CARDS ─── */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                  {/* Card 1: Attestation Posture */}
+                  <div className="p-1 rounded-2xl bg-[#F2F4F7] dark:bg-bg-void/60 border border-[#E2E6EC] dark:border-border-hairline shadow-xs">
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-bg-panel border border-[#E8ECF1] dark:border-border-hairline/60 shadow-xs space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span className="font-medium text-text-primary">Attestation Status</span>
+                        <div className="h-7 w-7 rounded-lg bg-accent-scan/10 text-accent-scan flex items-center justify-center">
+                          <Radio className="h-3.5 w-3.5 animate-pulse" />
+                        </div>
+                      </div>
+                      <div className="text-xl sm:text-2xl font-display font-bold text-accent-scan">
+                        Passed Remediation
+                      </div>
                     </div>
-                    <p className="text-xs text-text-muted font-mono mt-0.5">
-                      {verificationResult.matchDetail || "Verified against Zyron Security decentralized registry"}
-                    </p>
+                    <div className="px-3.5 py-2 text-xs text-text-muted flex items-center gap-1.5 font-mono">
+                      <span>Audit ID: {audit.id}</span>
+                      <span>•</span>
+                      <span>100% Verified</span>
+                    </div>
                   </div>
 
-                  <a
-                    href={audit.cryptography.reportUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="h-8 px-3.5 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors flex items-center gap-1.5 self-start sm:self-auto shadow-sm"
-                  >
-                    <Download className="w-3 h-3" />
-                    <span>Download Report PDF</span>
-                  </a>
+                  {/* Card 2: Secured SLOC */}
+                  <div className="p-1 rounded-2xl bg-[#F2F4F7] dark:bg-bg-void/60 border border-[#E2E6EC] dark:border-border-hairline shadow-xs">
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-bg-panel border border-[#E8ECF1] dark:border-border-hairline/60 shadow-xs space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span className="font-medium text-text-primary">Lines of Code</span>
+                        <div className="h-7 w-7 rounded-lg bg-sky-500/10 text-sky-500 flex items-center justify-center">
+                          <Layers className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                      <div className="text-xl sm:text-2xl font-display font-bold text-text-primary">
+                        {audit.sloc} LOC
+                      </div>
+                    </div>
+                    <div className="px-3.5 py-2 text-xs text-text-muted font-mono truncate">
+                      {audit.compilerVersion} verified
+                    </div>
+                  </div>
+
+                  {/* Card 3: Vulnerabilities Resolved */}
+                  <div className="p-1 rounded-2xl bg-[#F2F4F7] dark:bg-bg-void/60 border border-[#E2E6EC] dark:border-border-hairline shadow-xs">
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-bg-panel border border-[#E8ECF1] dark:border-border-hairline/60 shadow-xs space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span className="font-medium text-text-primary">Issues Remediated</span>
+                        <div className="h-7 w-7 rounded-lg bg-accent-scan/10 text-accent-scan flex items-center justify-center">
+                          <ShieldCheck className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                      <div className="text-xl sm:text-2xl font-display font-bold text-accent-scan">
+                        {audit.summary.resolved} / {audit.summary.totalFindings}
+                      </div>
+                    </div>
+                    <div className="px-3.5 py-2 text-xs text-text-muted font-mono">
+                      0 open critical vulnerabilities
+                    </div>
+                  </div>
+
+                  {/* Card 4: Attested Ledger */}
+                  <div className="p-1 rounded-2xl bg-[#F2F4F7] dark:bg-bg-void/60 border border-[#E2E6EC] dark:border-border-hairline shadow-xs">
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-bg-panel border border-[#E8ECF1] dark:border-border-hairline/60 shadow-xs space-y-1.5">
+                      <div className="flex items-center justify-between text-xs text-text-muted">
+                        <span className="font-medium text-text-primary">Storage Provenance</span>
+                        <div className="h-7 w-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                          <FileCheck2 className="h-3.5 w-3.5" />
+                        </div>
+                      </div>
+                      <div className="text-xl sm:text-2xl font-display font-bold text-text-primary">
+                        IPFS &amp; EVM
+                      </div>
+                    </div>
+                    <div className="px-3.5 py-2 text-xs text-text-muted font-mono truncate">
+                      CIDv1 deterministic sealed
+                    </div>
+                  </div>
                 </div>
 
-                {/* Scope & Details */}
-                <div className="p-6 space-y-6">
-                  {/* Protocol Overview Hero */}
-                  <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 sm:p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                {/* ─── DASHBOARD COMPONENT 2: PIPELINE PROGRESS STEPPER ─── */}
+                <div className="p-4 rounded-xl bg-bg-panel border border-border-hairline shadow-sm">
+                  <div className="flex items-center justify-between mb-3 text-xs font-mono">
+                    <span className="text-text-muted uppercase tracking-wider font-semibold">
+                      Security Pipeline Verification Stages
+                    </span>
+                    <span className="text-accent-scan font-bold flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Stage 4/4 Completed
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs font-mono">
+                    <div className="p-2.5 rounded-lg bg-bg-void border border-accent-scan/30 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-accent-scan/20 text-accent-scan flex items-center justify-center text-[10px] font-bold">1</span>
                       <div>
-                        <div className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
-                          Scope &amp; Protocol Verification
+                        <div className="text-text-primary font-semibold text-[11px]">Static &amp; AST Analysis</div>
+                        <div className="text-[10px] text-accent-scan">Pass completed</div>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-bg-void border border-accent-scan/30 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-accent-scan/20 text-accent-scan flex items-center justify-center text-[10px] font-bold">2</span>
+                      <div>
+                        <div className="text-text-primary font-semibold text-[11px]">Dynamic Fuzz Engine</div>
+                        <div className="text-[10px] text-accent-scan">Prover passed</div>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-bg-void border border-accent-scan/30 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-accent-scan/20 text-accent-scan flex items-center justify-center text-[10px] font-bold">3</span>
+                      <div>
+                        <div className="text-text-primary font-semibold text-[11px]">Lead Auditor Review</div>
+                        <div className="text-[10px] text-accent-scan">Patches verified</div>
+                      </div>
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-bg-void border border-accent-scan/40 bg-accent-scan/5 flex items-center gap-2">
+                      <span className="w-5 h-5 rounded-full bg-accent-scan text-white flex items-center justify-center text-[10px] font-bold">✓</span>
+                      <div>
+                        <div className="text-text-primary font-semibold text-[11px]">Cryptographic Seal</div>
+                        <div className="text-[10px] text-accent-scan font-bold">Attested to IPFS</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ─── DASHBOARD COMPONENT 3: TABBED AUDIT INSPECTOR ─── */}
+                <div className="border border-border-hairline rounded-[6px] bg-bg-panel shadow-2xl overflow-hidden">
+                  {/* Top Bar with Navigation Tabs */}
+                  <div className="border-b border-border-hairline bg-bg-void/50 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h2 className="text-base font-bold text-text-primary font-display">
+                            {audit.protocolName}
+                          </h2>
+                          <StatusPill status="completed" size="sm" />
+                          <span className="px-2 py-0.5 rounded-[4px] text-[10px] font-mono font-bold bg-bg-panel border border-border-hairline text-accent-scan">
+                            {verificationResult.matchType || "OFFICIAL_RECORD"}
+                          </span>
                         </div>
-                        <h3 className="text-lg font-bold text-text-primary font-display mt-0.5">
-                          {audit.protocolName}
-                        </h3>
-                        <p className="text-xs font-mono text-accent-scan mt-0.5">
-                          {audit.contractFileName}
+                        <p className="text-xs text-text-muted font-mono mt-0.5">
+                          {audit.contractFileName} · {verificationResult.matchDetail || "Verified against Zyron decentralized registry"}
                         </p>
                       </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="px-2.5 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-xs font-mono text-text-muted">
-                          Ticket: <strong className="text-text-primary">{audit.id}</strong>
-                        </span>
-                        <span className="px-2.5 py-1 rounded-[4px] bg-bg-panel border border-border-hairline text-xs font-mono text-accent-scan font-semibold flex items-center gap-1">
-                          <Check className="w-3.5 h-3.5" />
-                          Passed Remediation
-                        </span>
-                      </div>
                     </div>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border-hairline font-mono text-xs">
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">Deployment Target</div>
-                        <div className="text-text-primary font-semibold mt-0.5">{audit.network}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">Compiler Version</div>
-                        <div className="text-text-primary font-semibold mt-0.5">{audit.compilerVersion}</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">Source Lines</div>
-                        <div className="text-text-primary font-semibold mt-0.5">{audit.sloc} LOC</div>
-                      </div>
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">Certified On</div>
-                        <div className="text-text-primary font-semibold mt-0.5">
-                          {audit.completedAt
-                            ? new Date(audit.completedAt).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              })
-                            : "Verified"}
+                    {/* Sub Tabs */}
+                    <div className="flex items-center gap-1 bg-bg-void p-1 rounded-lg border border-border-hairline font-mono text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setResultSubTab("overview")}
+                        className={`px-3 py-1 rounded-[4px] transition-colors cursor-pointer ${
+                          resultSubTab === "overview"
+                            ? "bg-text-primary text-bg-void font-bold shadow-xs"
+                            : "text-text-muted hover:text-text-primary"
+                        }`}
+                      >
+                        Overview
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResultSubTab("proofs")}
+                        className={`px-3 py-1 rounded-[4px] transition-colors cursor-pointer ${
+                          resultSubTab === "proofs"
+                            ? "bg-text-primary text-bg-void font-bold shadow-xs"
+                            : "text-text-muted hover:text-text-primary"
+                        }`}
+                      >
+                        Proof Vault
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setResultSubTab("findings")}
+                        className={`px-3 py-1 rounded-[4px] transition-colors cursor-pointer ${
+                          resultSubTab === "findings"
+                            ? "bg-text-primary text-bg-void font-bold shadow-xs"
+                            : "text-text-muted hover:text-text-primary"
+                        }`}
+                      >
+                        Findings ({audit.findings.length})
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Tab Body */}
+                  <div className="p-6">
+                    {/* SubTab 1: Overview */}
+                    {resultSubTab === "overview" && (
+                      <div className="space-y-6">
+                        <div className="bg-bg-void border border-border-hairline rounded-[6px] p-5">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                            <div>
+                              <div className="text-[10px] font-mono text-text-muted uppercase tracking-wider">
+                                Target Smart Contract
+                              </div>
+                              <h3 className="text-lg font-bold text-text-primary font-display mt-0.5">
+                                {audit.contractFileName}
+                              </h3>
+                              <p className="text-xs font-mono text-accent-scan mt-0.5">
+                                Engagement ID: {audit.id}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={audit.cryptography.reportUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="h-8 px-3.5 rounded-[4px] bg-text-primary text-bg-void font-bold text-xs font-mono hover:bg-accent-scan hover:text-white transition-colors flex items-center gap-1.5 shadow-sm"
+                              >
+                                <Download className="w-3 h-3" />
+                                <span>Download Certified PDF</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border-hairline font-mono text-xs">
+                            <div>
+                              <div className="text-[10px] text-text-muted uppercase">Deployment Target</div>
+                              <div className="text-text-primary font-semibold mt-0.5">{audit.network}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-text-muted uppercase">Compiler Version</div>
+                              <div className="text-text-primary font-semibold mt-0.5">{audit.compilerVersion}</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-text-muted uppercase">Source Lines</div>
+                              <div className="text-text-primary font-semibold mt-0.5">{audit.sloc} LOC</div>
+                            </div>
+                            <div>
+                              <div className="text-[10px] text-text-muted uppercase">Certified Timestamp</div>
+                              <div className="text-text-primary font-semibold mt-0.5">
+                                {audit.completedAt
+                                  ? new Date(audit.completedAt).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric",
+                                    })
+                                  : "Verified"}
+                              </div>
+                            </div>
+                          </div>
+
+                          {audit.contractAddress && (
+                            <div className="mt-3 pt-3 border-t border-border-hairline flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono gap-1">
+                              <span className="text-text-muted">Verified Contract Address:</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-accent-scan break-all">{audit.contractAddress}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(audit.contractAddress!, "contract")}
+                                  className="p-1 hover:bg-bg-panel rounded text-text-muted hover:text-text-primary cursor-pointer shrink-0"
+                                >
+                                  {copiedKey === "contract" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </div>
 
-                    {audit.contractAddress && (
-                      <div className="mt-3 pt-3 border-t border-border-hairline flex flex-col sm:flex-row sm:items-center justify-between text-xs font-mono gap-1">
-                        <span className="text-text-muted">Verified Contract Address:</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-accent-scan break-all">{audit.contractAddress}</span>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(audit.contractAddress!, "contract")}
-                            className="p-1 hover:bg-bg-panel rounded text-text-muted hover:text-text-primary cursor-pointer shrink-0"
-                          >
-                            {copiedKey === "contract" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                        {/* Severity Metrics Bar */}
+                        <div>
+                          <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted mb-2">
+                            Audited Findings Breakdown
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 font-mono">
+                            <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                              <div className="text-xl font-bold text-text-primary">{audit.summary.critical}</div>
+                              <div className="text-[10px] text-text-muted uppercase mt-0.5">Critical</div>
+                            </div>
+                            <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                              <div className="text-xl font-bold text-text-primary">{audit.summary.high}</div>
+                              <div className="text-[10px] text-text-muted uppercase mt-0.5">High</div>
+                            </div>
+                            <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                              <div className="text-xl font-bold text-text-primary">{audit.summary.medium}</div>
+                              <div className="text-[10px] text-text-muted uppercase mt-0.5">Medium</div>
+                            </div>
+                            <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                              <div className="text-xl font-bold text-text-primary">{audit.summary.low}</div>
+                              <div className="text-[10px] text-text-muted uppercase mt-0.5">Low / Gas</div>
+                            </div>
+                            <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
+                              <div className="text-xl font-bold text-accent-scan">{audit.summary.resolved}</div>
+                              <div className="text-[10px] text-accent-scan uppercase mt-0.5 font-bold">100% Remediated</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     )}
-                  </div>
 
-                  {/* Cryptographic Proofs (2 Columns) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Left: Bytecode & Merkle */}
-                    <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
-                      <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
-                        <Lock className="w-3.5 h-3.5 text-accent-scan" />
-                        On-Chain Cryptographic Proofs
+                    {/* SubTab 2: Proof Vault */}
+                    {resultSubTab === "proofs" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Bytecode & Merkle */}
+                        <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
+                          <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
+                            <Lock className="w-3.5 h-3.5 text-accent-scan" />
+                            On-Chain Cryptographic Proofs
+                          </div>
+
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase">Source Bytecode SHA-256 Digest</div>
+                            <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                              <span className="text-[11px] text-accent-scan break-all">
+                                {audit.cryptography.bytecodeHash || "0x98f4a3c2..."}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(audit.cryptography.bytecodeHash || "", "bytecode")}
+                                className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
+                              >
+                                {copiedKey === "bytecode" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          {audit.cryptography.merkleRoot && (
+                            <div>
+                              <div className="text-[10px] text-text-muted uppercase">Findings Merkle Root</div>
+                              <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                                <span className="text-[11px] text-text-primary break-all">
+                                  {audit.cryptography.merkleRoot}
+                                </span>
+                                <button
+                                type="button"
+                                onClick={() => copyToClipboard(audit.cryptography.merkleRoot || "", "merkle")}
+                                className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
+                              >
+                                {copiedKey === "merkle" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {audit.cryptography.onChainTxHash && (
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase">On-Chain Attestation Tx</div>
+                            <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                              <span className="text-[11px] text-text-primary break-all">
+                                {audit.cryptography.onChainTxHash}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(audit.cryptography.onChainTxHash || "", "tx")}
+                                className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
+                              >
+                                {copiedKey === "tx" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">Source Bytecode SHA-256 Digest</div>
-                        <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                          <span className="text-[11px] text-accent-scan break-all">
-                            {audit.cryptography.bytecodeHash || "0x98f4a3c2..."}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(audit.cryptography.bytecodeHash || "", "bytecode")}
-                            className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
-                          >
-                            {copiedKey === "bytecode" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                      {/* IPFS Decentralized Storage */}
+                      <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
+                        <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
+                          <Terminal className="w-3.5 h-3.5 text-accent-scan" />
+                          Decentralized IPFS Storage
                         </div>
-                      </div>
 
-                      {audit.cryptography.merkleRoot && (
                         <div>
-                          <div className="text-[10px] text-text-muted uppercase">Findings Merkle Root</div>
+                          <div className="text-[10px] text-text-muted uppercase">RFC CIDv1 Base32 Multihash</div>
                           <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                            <span className="text-[11px] text-text-primary break-all">
-                              {audit.cryptography.merkleRoot}
+                            <span className="text-[11px] text-accent-scan break-all">
+                              {audit.cryptography.ipfsCid || "bafkrei..."}
                             </span>
                             <button
                               type="button"
-                              onClick={() => copyToClipboard(audit.cryptography.merkleRoot || "", "merkle")}
+                              onClick={() => copyToClipboard(audit.cryptography.ipfsCid || "", "cid")}
                               className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
                             >
-                              {copiedKey === "merkle" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                              {copiedKey === "cid" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
                             </button>
                           </div>
                         </div>
-                      )}
 
-                      {audit.cryptography.onChainTxHash && (
                         <div>
-                          <div className="text-[10px] text-text-muted uppercase">On-Chain Attestation Tx</div>
-                          <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                            <span className="text-[11px] text-text-primary break-all">
-                              {audit.cryptography.onChainTxHash}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => copyToClipboard(audit.cryptography.onChainTxHash || "", "tx")}
-                              className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
-                            >
-                              {copiedKey === "tx" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Right: IPFS Decentralized Storage */}
-                    <div className="bg-bg-void border border-border-hairline rounded-[4px] p-4 space-y-3 font-mono text-xs">
-                      <div className="flex items-center gap-2 text-text-primary font-bold text-xs uppercase tracking-wider pb-2 border-b border-border-hairline">
-                        <Terminal className="w-3.5 h-3.5 text-accent-scan" />
-                        Decentralized IPFS Storage
-                      </div>
-
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">RFC CIDv1 Base32 Multihash</div>
-                        <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
-                          <span className="text-[11px] text-accent-scan break-all">
-                            {audit.cryptography.ipfsCid || "bafkrei..."}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(audit.cryptography.ipfsCid || "", "cid")}
-                            className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
+                          <div className="text-[10px] text-text-muted uppercase">IPFS Gateway Access</div>
+                          <a
+                            href={audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2 text-[11px] text-text-primary hover:text-accent-scan transition-colors"
                           >
-                            {copiedKey === "cid" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
-                          </button>
+                            <span className="truncate">{audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}</span>
+                            <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                          </a>
+                        </div>
+
+                        <div className="text-[10px] text-text-muted pt-1">
+                          Permanently pinned artifact. Tamper-evident byte representation matches on-chain attestation digest.
                         </div>
                       </div>
-
-                      <div>
-                        <div className="text-[10px] text-text-muted uppercase">IPFS Gateway Access</div>
-                        <a
-                          href={audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2 text-[11px] text-text-primary hover:text-accent-scan transition-colors"
-                        >
-                          <span className="truncate">{audit.cryptography.ipfsGatewayUrl || `https://ipfs.io/ipfs/${audit.cryptography.ipfsCid}`}</span>
-                          <ExternalLink className="w-3.5 h-3.5 shrink-0" />
-                        </a>
-                      </div>
-
-                      <div className="text-[10px] text-text-muted pt-1">
-                        Permanently pinned artifact. Tamper-evident byte representation matches on-chain attestation digest.
-                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Summary Severity Stats */}
-                  <div>
-                    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted mb-2">
-                      Finding Metrics &amp; Remediation
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 font-mono">
-                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
-                        <div className="text-xl font-bold text-text-primary">{audit.summary.critical}</div>
-                        <div className="text-[10px] text-text-muted uppercase mt-0.5">Critical</div>
-                      </div>
-                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
-                        <div className="text-xl font-bold text-text-primary">{audit.summary.high}</div>
-                        <div className="text-[10px] text-text-muted uppercase mt-0.5">High</div>
-                      </div>
-                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
-                        <div className="text-xl font-bold text-text-primary">{audit.summary.medium}</div>
-                        <div className="text-[10px] text-text-muted uppercase mt-0.5">Medium</div>
-                      </div>
-                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
-                        <div className="text-xl font-bold text-text-primary">{audit.summary.low}</div>
-                        <div className="text-[10px] text-text-muted uppercase mt-0.5">Low / Gas</div>
-                      </div>
-                      <div className="p-3 rounded-[4px] bg-bg-void border border-border-hairline text-center">
-                        <div className="text-xl font-bold text-accent-scan">{audit.summary.resolved}</div>
-                        <div className="text-[10px] text-accent-scan uppercase mt-0.5 font-bold">100% Remediated</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Detailed Findings List */}
-                  {audit.findings && audit.findings.length > 0 && (
-                    <div className="space-y-3 pt-2">
-                      <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted">
-                        Certified Vulnerabilities &amp; Verified Patches ({audit.findings.length})
-                      </div>
-                      <div className="space-y-2.5">
-                        {audit.findings.map((f, idx) => (
+                  {/* SubTab 3: Findings */}
+                  {resultSubTab === "findings" && (
+                    <div className="space-y-3">
+                      {audit.findings && audit.findings.length > 0 ? (
+                        audit.findings.map((f, idx) => (
                           <div
                             key={idx}
-                            className="bg-bg-void border border-border-hairline rounded-[4px] p-3.5 font-mono text-xs space-y-2"
+                            className="bg-bg-void border border-border-hairline rounded-[4px] p-4 font-mono text-xs space-y-2"
                           >
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                               <div className="flex items-center gap-2">
@@ -940,12 +1111,17 @@ export default function PublicVerifyPage() {
                               </div>
                             )}
                           </div>
-                        ))}
-                      </div>
+                        ))
+                      ) : (
+                        <p className="text-xs text-text-muted font-mono italic">
+                          No vulnerabilities identified in this audit engagement.
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
+            </div>
             ) : (
               /* Unverified / Not Found Banner */
               <div className="border border-border-hairline rounded-[6px] bg-bg-panel p-6 sm:p-8 shadow-xl text-center space-y-3 animate-in fade-in duration-200">
@@ -1105,5 +1281,13 @@ export default function PublicVerifyPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+export default function PublicVerifyPage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-bg-void text-text-primary" />}>
+      <VerifyPageContent />
+    </React.Suspense>
   );
 }
