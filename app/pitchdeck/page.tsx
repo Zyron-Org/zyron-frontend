@@ -43,16 +43,19 @@ import {
   Search,
   CheckSquare,
   Crosshair,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// --- PITCH DECK SLIDE DEFINITIONS ---
+// --- PITCH DECK SLIDE DEFINITIONS WITH VOICEOVER SCRIPT ---
 interface SlideData {
   id: string;
   badge: string;
   title: string;
   subtitle: string;
   category: "Vision" | "Market" | "Product" | "Business" | "Traction";
+  script: string;
 }
 
 const SLIDES_META: SlideData[] = [
@@ -62,6 +65,7 @@ const SLIDES_META: SlideData[] = [
     title: "ZYRON PROTOCOL SECURITY",
     subtitle: "The Cryptographic Security Infrastructure for Web3 Protocols",
     category: "Vision",
+    script: "Welcome to the Zyron Protocol Security pitch deck. Zyron provides the cryptographic security infrastructure for Web3 protocols, replacing slow, opaque PDF audits with automated 14-pass AST static analysis, structured human review, and immutable on-chain attestations.",
   },
   {
     id: "problem",
@@ -69,6 +73,7 @@ const SLIDES_META: SlideData[] = [
     title: "The Web3 Security Bottleneck",
     subtitle: "Smart contracts secure tens of billions in value, yet audits remain slow, expensive, and unverifiable.",
     category: "Market",
+    script: "Smart contracts secure tens of billions of dollars in value, yet the audit process remains a critical bottleneck. Top audit firms operate with 6 to 10 week wait times, deliver static PDF reports that become outdated instantly, lack cryptographic bytecode linkage, and charge exorbitant fees.",
   },
   {
     id: "solution",
@@ -76,6 +81,7 @@ const SLIDES_META: SlideData[] = [
     title: "Continuous, Verifiable Protocol Security",
     subtitle: "Automated AST analysis, structured human review, and immutable on-chain attestations.",
     category: "Product",
+    script: "Zyron solves this bottleneck with continuous, verifiable security. We combine automated Abstract Syntax Tree analysis for sub-minute detection, structured dual-pane human review for expert judgment, and immutable on-chain attestations that can actually be verified.",
   },
   {
     id: "technology",
@@ -83,6 +89,7 @@ const SLIDES_META: SlideData[] = [
     title: "14-Pass AST & Control-Flow Analysis Engine",
     subtitle: "Deterministic static analysis parsing Solidity into AST and building Control Flow Graphs.",
     category: "Product",
+    script: "Our engine parses Solidity into AST nodes and constructs Control Flow Graphs. It executes 14 specialized security passes—covering access control, reentrancy, oracle manipulation, proxy storage safety, token standards, assembly risks, and centralization vectors.",
   },
   {
     id: "human-review",
@@ -90,6 +97,7 @@ const SLIDES_META: SlideData[] = [
     title: "Dual-Pane Auditor Workbench",
     subtitle: "Automated tools surface candidates. Human experts make the final judgment.",
     category: "Product",
+    script: "Automated tools surface candidate vulnerabilities while expert human auditors make the final judgment. Our workbench features side-by-side code inspection, inline comments, severity calibration, remediation tracking, and multi-file project support.",
   },
   {
     id: "attestation",
@@ -97,6 +105,7 @@ const SLIDES_META: SlideData[] = [
     title: "Verifiable Certificates, Not Just PDFs",
     subtitle: "SHA-256 bytecode hash, Merkle root of findings, and EIP-712 auditor signatures.",
     category: "Product",
+    script: "Every completed audit produces an on-chain attestation. This includes the SHA-256 bytecode hash, Merkle root of findings, EIP-712 auditor signatures, and engagement timestamps anchored directly to public EVM registries.",
   },
   {
     id: "how-it-works",
@@ -104,6 +113,7 @@ const SLIDES_META: SlideData[] = [
     title: "Simple Audit Lifecycle",
     subtitle: "Transparent audit process from client code submission to on-chain attestation.",
     category: "Product",
+    script: "Our audit lifecycle is simple and transparent. The client submits contracts, automated AST scanning runs instantly, auditors review findings in the workbench, issues are triaged and remediated, and the final attestation is published onchain.",
   },
   {
     id: "market",
@@ -111,6 +121,7 @@ const SLIDES_META: SlideData[] = [
     title: "Growing Demand for Better Security Infrastructure",
     subtitle: "Sitting at the intersection of security tooling and on-chain trust.",
     category: "Market",
+    script: "Demand for verifiable security is growing rapidly. Driven by daily contract deployments across Layer-2 rollups, institutional real-world asset onboarding, a shift toward continuous security, and a strong need for verifiable proof over marketing PDFs.",
   },
   {
     id: "business-model",
@@ -118,6 +129,7 @@ const SLIDES_META: SlideData[] = [
     title: "Hybrid Revenue Model",
     subtitle: "Fixed-price audit engagements, continuous scanning plans, and enterprise verification.",
     category: "Business",
+    script: "Zyron operates a hybrid revenue model. We combine fixed-price security review engagements with continuous scanning subscriptions for active protocols, building a clear path from project-based revenue to recurring ARR.",
   },
   {
     id: "competition",
@@ -125,6 +137,7 @@ const SLIDES_META: SlideData[] = [
     title: "Why Zyron Outperforms Legacy & Pure Scanners",
     subtitle: "High depth of analysis, fast delivery, human expertise, and verifiable bytecode links.",
     category: "Business",
+    script: "Compared to traditional audit firms and pure static scanners, Zyron delivers high depth of analysis with fast turnaround times, certified human expertise, continuous protection, and verifiable bytecode links.",
   },
   {
     id: "roadmap",
@@ -132,6 +145,7 @@ const SLIDES_META: SlideData[] = [
     title: "Current Status & Multi-Phase Roadmap",
     subtitle: "From core AST engine and Arbitrum Sepolia attestations to ERC-8004 auditor identity.",
     category: "Traction",
+    script: "Today, our core AST engine, auditor workbench, and Arbitrum attestation system are live. Near-term focus expands multi-file support and reporting, leading to ERC-8004 auditor identity and continuous monitoring.",
   },
   {
     id: "vision",
@@ -139,6 +153,7 @@ const SLIDES_META: SlideData[] = [
     title: "Building the Trust Layer for Smart Contract Security",
     subtitle: "Making professional security reviews more accessible, transparent, and verifiable.",
     category: "Vision",
+    script: "Zyron exists to build the trust layer for smart contract security. We are currently onboarding design partner protocols, security researchers, and strategic supporters to make security work that can actually be trusted onchain.",
   },
 ];
 
@@ -147,9 +162,111 @@ export default function PitchDeckPage() {
   const [isFullscreen, setIsFullscreen] = React.useState<boolean>(false);
   const [isOverviewOpen, setIsOverviewOpen] = React.useState<boolean>(false);
   const [isAutoPlaying, setIsAutoPlaying] = React.useState<boolean>(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = React.useState<boolean>(true);
+  const [isSpeaking, setIsSpeaking] = React.useState<boolean>(false);
+  const [currentCaption, setCurrentCaption] = React.useState<string>("");
   const deckContainerRef = React.useRef<HTMLDivElement>(null);
+  const selectedVoiceRef = React.useRef<SpeechSynthesisVoice | null>(null);
 
   const totalSlides = SLIDES_META.length;
+
+  // Initialize SpeechSynthesis voice selection
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length > 0) {
+        const preferredVoice =
+          voices.find(
+            (v) =>
+              v.name.includes("Samantha") ||
+              v.name.includes("Karen") ||
+              v.name.includes("Daniel") ||
+              v.name.includes("Google US English") ||
+              v.name.includes("Natural")
+          ) ||
+          voices.find((v) => v.lang.startsWith("en-US") || v.lang.startsWith("en-GB")) ||
+          voices.find((v) => v.lang.startsWith("en")) ||
+          voices[0];
+        selectedVoiceRef.current = preferredVoice || null;
+      }
+    };
+
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
+
+  // Function to handle speaking current slide narration script
+  const speakCurrentSlide = React.useCallback(
+    (slideIndex: number, autoAdvance: boolean) => {
+      if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+
+      window.speechSynthesis.cancel(); // Stop any existing speech
+
+      if (!isVoiceEnabled) {
+        setIsSpeaking(false);
+        setCurrentCaption("");
+        return;
+      }
+
+      const slide = SLIDES_META[slideIndex];
+      if (!slide || !slide.script) return;
+
+      const utterance = new SpeechSynthesisUtterance(slide.script);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+
+      if (selectedVoiceRef.current) {
+        utterance.voice = selectedVoiceRef.current;
+      }
+
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setCurrentCaption(slide.script);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        if (autoAdvance && slideIndex < totalSlides - 1) {
+          setCurrentSlide((prev) => prev + 1);
+        } else if (slideIndex === totalSlides - 1) {
+          setIsAutoPlaying(false);
+        }
+      };
+
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    },
+    [isVoiceEnabled, totalSlides]
+  );
+
+  // Playback effect when slide changes or autoplay is toggled
+  React.useEffect(() => {
+    if (isAutoPlaying) {
+      speakCurrentSlide(currentSlide, true);
+    } else {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsSpeaking(false);
+      setCurrentCaption("");
+    }
+  }, [currentSlide, isAutoPlaying, speakCurrentSlide]);
+
+  // Cleanup on unmount
+  React.useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
 
   const nextSlide = React.useCallback(() => {
     setCurrentSlide((prev) => (prev < totalSlides - 1 ? prev + 1 : prev));
@@ -164,6 +281,11 @@ export default function PitchDeckPage() {
       setCurrentSlide(index);
       setIsOverviewOpen(false);
     }
+  };
+
+  const handleStartPresentation = () => {
+    setCurrentSlide(0);
+    setIsAutoPlaying(true);
   };
 
   // Keyboard navigation
@@ -191,21 +313,6 @@ export default function PitchDeckPage() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [nextSlide, prevSlide, isOverviewOpen]);
-
-  // Autoplay functionality
-  React.useEffect(() => {
-    if (!isAutoPlaying) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => {
-        if (prev >= totalSlides - 1) {
-          setIsAutoPlaying(false);
-          return prev;
-        }
-        return prev + 1;
-      });
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [isAutoPlaying, totalSlides]);
 
   // Fullscreen handler
   const toggleFullscreen = () => {
@@ -252,7 +359,7 @@ export default function PitchDeckPage() {
             </div>
             <div className="flex flex-col">
               <span className="font-mono font-bold text-xs tracking-wider text-text-primary flex items-center gap-2">
-                ZYRON <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-bg-panel-raised text-accent-scan border border-border-hairline">PITCH DECK</span>
+                ZYRON <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-bg-panel-raised text-accent-scan border border-border-hairline">VOICEOVER DECK</span>
               </span>
               <span className="text-[10px] text-text-muted font-mono hidden sm:inline">Cryptographic Protocol Security</span>
             </div>
@@ -270,6 +377,46 @@ export default function PitchDeckPage() {
 
         {/* Right Action Controls */}
         <div className="flex items-center gap-2">
+          {/* Voiceover Mute/Unmute Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextVoiceState = !isVoiceEnabled;
+              setIsVoiceEnabled(nextVoiceState);
+              if (!nextVoiceState && typeof window !== "undefined" && "speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
+                setIsSpeaking(false);
+                setCurrentCaption("");
+              }
+            }}
+            className={cn(
+              "px-2.5 py-1.5 rounded text-xs font-mono border transition-colors flex items-center gap-1.5 cursor-pointer",
+              isVoiceEnabled
+                ? "bg-bg-panel-raised border-accent-scan/50 text-accent-scan"
+                : "bg-bg-panel border-border-hairline text-text-muted hover:text-text-primary"
+            )}
+            title={isVoiceEnabled ? "Voiceover Audio Enabled" : "Voiceover Audio Muted"}
+          >
+            {isVoiceEnabled ? <Volume2 className="h-3.5 w-3.5 text-accent-scan" /> : <VolumeX className="h-3.5 w-3.5 text-text-muted" />}
+            <span className="hidden sm:inline font-mono text-[11px]">{isVoiceEnabled ? "Voice On" : "Muted"}</span>
+          </button>
+
+          {/* Auto Presentation Play/Pause */}
+          <button
+            type="button"
+            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
+            className={cn(
+              "px-3 py-1.5 rounded text-xs font-mono border transition-colors flex items-center gap-1.5 cursor-pointer font-bold",
+              isAutoPlaying
+                ? "bg-bg-panel-raised border-signal-resolved text-signal-resolved"
+                : "bg-accent-scan text-bg-void border-accent-scan hover:bg-accent-scan/90"
+            )}
+            title="Auto-Present Deck with Audio Voiceover"
+          >
+            {isAutoPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 fill-bg-void" />}
+            <span>{isAutoPlaying ? "Pause Presentation" : "Play Presentation"}</span>
+          </button>
+
           {/* Slide Overview Toggle */}
           <button
             type="button"
@@ -278,28 +425,12 @@ export default function PitchDeckPage() {
               "px-2.5 py-1.5 rounded text-xs font-mono border transition-colors flex items-center gap-1.5 cursor-pointer",
               isOverviewOpen
                 ? "bg-bg-panel-raised border-accent-scan text-accent-scan"
-                : "bg-bg-panel border-border-hairline text-text-muted hover:text-text-primary hover:border-border-hairline"
+                : "bg-bg-panel border-border-hairline text-text-muted hover:text-text-primary"
             )}
             title="Slide Overview (Press 'O' or 'G')"
           >
             <Grid className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Overview</span>
-          </button>
-
-          {/* Autoplay Toggle */}
-          <button
-            type="button"
-            onClick={() => setIsAutoPlaying(!isAutoPlaying)}
-            className={cn(
-              "px-2.5 py-1.5 rounded text-xs font-mono border transition-colors flex items-center gap-1.5 cursor-pointer",
-              isAutoPlaying
-                ? "bg-bg-panel-raised border-signal-resolved text-signal-resolved"
-                : "bg-bg-panel border-border-hairline text-text-muted hover:text-text-primary"
-            )}
-            title="Autoplay Presentation"
-          >
-            {isAutoPlaying ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-            <span className="hidden sm:inline">{isAutoPlaying ? "Pause" : "Play"}</span>
           </button>
 
           {/* Fullscreen Toggle */}
@@ -324,10 +455,21 @@ export default function PitchDeckPage() {
         </div>
       </header>
 
+      {/* Teleprompter Voiceover Caption Bar */}
+      {isSpeaking && currentCaption && (
+        <div className="mt-3 max-w-5xl w-full mx-auto p-2.5 rounded bg-bg-panel border border-accent-scan/40 flex items-center gap-3 animate-fadeIn z-20 font-mono text-xs">
+          <div className="flex items-center gap-1.5 text-accent-scan shrink-0 font-bold">
+            <Radio className="h-4 w-4 text-accent-scan animate-pulse" />
+            <span>[VOICEOVER]</span>
+          </div>
+          <p className="text-text-primary text-xs truncate font-sans font-medium">{currentCaption}</p>
+        </div>
+      )}
+
       {/* Main Slide Presentation Stage */}
       <main className="flex-1 flex flex-col justify-center items-center py-6 sm:py-8 max-w-5xl w-full mx-auto relative z-10">
         <div className="w-full transition-all duration-200">
-          {currentSlide === 0 && <SlideCover onNext={nextSlide} />}
+          {currentSlide === 0 && <SlideCover onNext={nextSlide} onStart={handleStartPresentation} />}
           {currentSlide === 1 && <SlideProblem />}
           {currentSlide === 2 && <SlideSolution />}
           {currentSlide === 3 && <SlideTechnology />}
@@ -338,7 +480,7 @@ export default function PitchDeckPage() {
           {currentSlide === 8 && <SlideBusinessModel />}
           {currentSlide === 9 && <SlideCompetition />}
           {currentSlide === 10 && <SlideRoadmap />}
-          {currentSlide === 11 && <SlideVision onRestart={() => setCurrentSlide(0)} />}
+          {currentSlide === 11 && <SlideVision onRestart={() => handleStartPresentation()} />}
         </div>
       </main>
 
@@ -459,7 +601,7 @@ export default function PitchDeckPage() {
 // ==========================================
 
 // --- SLIDE 1: COVER ---
-function SlideCover({ onNext }: { onNext: () => void }) {
+function SlideCover({ onNext, onStart }: { onNext: () => void; onStart: () => void }) {
   return (
     <div className="flex flex-col items-center text-center space-y-8 py-4 max-w-3xl mx-auto">
       {/* Eyebrow */}
@@ -502,14 +644,22 @@ function SlideCover({ onNext }: { onNext: () => void }) {
         })}
       </div>
 
-      {/* CTA Button */}
-      <div className="pt-2">
+      {/* CTA Buttons */}
+      <div className="pt-2 flex items-center justify-center gap-3">
+        <button
+          type="button"
+          onClick={onStart}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded bg-accent-scan text-bg-void font-mono font-bold text-xs hover:bg-accent-scan/90 transition-colors cursor-pointer"
+        >
+          <Play className="h-4 w-4 fill-bg-void" />
+          <span>PLAY AUDIO PRESENTATION</span>
+        </button>
         <button
           type="button"
           onClick={onNext}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded bg-accent-scan text-bg-void font-mono font-bold text-xs hover:bg-accent-scan/90 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded bg-bg-panel border border-border-hairline text-text-primary font-mono text-xs hover:bg-bg-panel-raised transition-colors cursor-pointer"
         >
-          <span>ENTER DECK PRESENTATION</span>
+          <span>MANUAL SLIDES</span>
           <ArrowRight className="h-4 w-4" />
         </button>
       </div>
@@ -849,7 +999,7 @@ function SlideHowItWorks() {
         description="Transparent process from start to finish across 5 structured stages:"
       />
 
-      {/* 5 Stages Sequence (Genuine sequence stage 01 to 05) */}
+      {/* 5 Stages Sequence */}
       <div className="space-y-2.5 font-mono text-xs">
         {[
           { step: "STAGE 01", title: "Client Submission", desc: "Client submits smart contract source code files or GitHub repository." },
@@ -1209,9 +1359,10 @@ function SlideVision({ onRestart }: { onRestart: () => void }) {
           <button
             type="button"
             onClick={onRestart}
-            className="px-3.5 py-2 rounded bg-bg-panel hover:bg-bg-panel border border-border-hairline text-text-primary transition-colors cursor-pointer"
+            className="px-3.5 py-2 rounded bg-bg-panel hover:bg-bg-panel border border-border-hairline text-text-primary transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            Replay Deck
+            <Play className="h-3.5 w-3.5 fill-text-primary" />
+            <span>Replay Presentation</span>
           </button>
         </div>
       </div>
