@@ -802,6 +802,24 @@ library TransferHelper {
     toast.success(`Finding ${id} confirmed as active vulnerability.`);
   };
 
+  // Permanently Delete Finding
+  const handleDeleteFinding = async (id: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this finding? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/findings/${id}`);
+    } catch (e: any) {
+      console.warn("Could not delete finding on API:", e.message);
+    }
+
+    setFindings((prev) => prev.filter((f) => f.id !== id));
+    setSelectedFindingId("");
+    setFindingView("list");
+    toast.success(`Finding ${id} permanently deleted.`);
+  };
+
   // Flag finding for client remediation
   const handleFlagForRemediation = async (id: string) => {
     try {
@@ -1808,6 +1826,15 @@ mitigated or verified false positives before production deployment.
                           leftIcon={<FileEdit className="h-3.5 w-3.5" />}
                         >
                           Edit Finding Details
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-signal-critical border-signal-critical/40 hover:bg-signal-critical/10 text-xs font-semibold"
+                          onClick={() => handleDeleteFinding(selectedFinding.id)}
+                          leftIcon={<Trash2 className="h-3.5 w-3.5" />}
+                        >
+                          Permanently Delete Finding
                         </Button>
                       </div>
                     ) : (
