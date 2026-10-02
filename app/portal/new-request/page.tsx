@@ -40,7 +40,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ExpandingButton } from "@/components/ui/expanding-button";
-import { OPEN_SOURCE_TEST_PROJECT } from "@/lib/mock-data";
 import { apiClient } from "@/lib/api-client";
 import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
@@ -90,7 +89,7 @@ export default function NewAuditRequestPage() {
 
   // Step 1: Repository / Ingestion State
   const [scopeMode, setScopeMode] = React.useState<"personal" | "org" | "test" | "custom" | "upload">(
-    isGithubConnected ? "personal" : "test"
+    isGithubConnected ? "personal" : "custom"
   );
   const [userRepos, setUserRepos] = React.useState<GithubRepoItem[]>([]);
   const [userOrgs, setUserOrgs] = React.useState<GithubOrgItem[]>([]);
@@ -103,9 +102,9 @@ export default function NewAuditRequestPage() {
   const [visibilityFilter, setVisibilityFilter] = React.useState<"all" | "private" | "public">("all");
 
   const [selectedRepo, setSelectedRepo] = React.useState<GithubRepoItem | null>(null);
-  const [customGithubUrl, setCustomGithubUrl] = React.useState<string>("https://github.com/Uniswap/v2-core");
-  const [availableBranches, setAvailableBranches] = React.useState<string[]>(["master", "main", "dev"]);
-  const [selectedBranch, setSelectedBranch] = React.useState<string>("master");
+  const [customGithubUrl, setCustomGithubUrl] = React.useState<string>("");
+  const [availableBranches, setAvailableBranches] = React.useState<string[]>(["main", "master"]);
+  const [selectedBranch, setSelectedBranch] = React.useState<string>("main");
   const [isLoadingBranches, setIsLoadingBranches] = React.useState<boolean>(false);
 
   // Blockchain contract extension whitelist
@@ -123,23 +122,18 @@ export default function NewAuditRequestPage() {
   );
 
   // Step 2: Protocol Scope & Metadata State
-  const defaultTestContract = OPEN_SOURCE_TEST_PROJECT.contractFiles[0];
-  const [availableContracts, setAvailableContracts] = React.useState<string[]>([
-    "contracts/UniswapV2Pair.sol",
-    "contracts/UniswapV2Factory.sol",
-    "contracts/UniswapV2ERC20.sol",
-  ]);
+  const [availableContracts, setAvailableContracts] = React.useState<string[]>([]);
   const [isLoadingContracts, setIsLoadingContracts] = React.useState<boolean>(false);
-  const [repoHasBlockchainFiles, setRepoHasBlockchainFiles] = React.useState<boolean | null>(true);
+  const [repoHasBlockchainFiles, setRepoHasBlockchainFiles] = React.useState<boolean | null>(null);
   const [repoInspectionMessage, setRepoInspectionMessage] = React.useState<string | null>(null);
 
-  const [protocolName, setProtocolName] = React.useState<string>("Uniswap V2 Core");
-  const [contractFileName, setContractFileName] = React.useState<string>(defaultTestContract.fileName);
-  const [contractAddress, setContractAddress] = React.useState<string>("0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f");
+  const [protocolName, setProtocolName] = React.useState<string>("");
+  const [contractFileName, setContractFileName] = React.useState<string>("");
+  const [contractAddress, setContractAddress] = React.useState<string>("");
   const [compilerVersion, setCompilerVersion] = React.useState<string>("v0.8.20");
   const [network, setNetwork] = React.useState<string>("Ethereum Mainnet (1)");
-  const [gitCommit, setGitCommit] = React.useState<string>(defaultTestContract.commit);
-  const [sourceCode, setSourceCode] = React.useState<string>(defaultTestContract.sourceCode);
+  const [gitCommit, setGitCommit] = React.useState<string>("");
+  const [sourceCode, setSourceCode] = React.useState<string>("");
 
   // Step 3: Security Invariants & Attack Vectors
   const [invariants, setInvariants] = React.useState<Record<string, boolean>>({
@@ -151,23 +145,16 @@ export default function NewAuditRequestPage() {
     math: true,
     liquidity: true,
   });
-  const [customInvariants, setCustomInvariants] = React.useState<string>(
-    "K invariant (x * y = k) must never decrease after token swap executions. Total LP token supply must accurately reflect deposited liquidity shares."
-  );
-  const [outOfScope, setOutOfScope] = React.useState<string>("Mock ERC20 token fixtures in contracts/test/ are excluded from analysis.");
+  const [customInvariants, setCustomInvariants] = React.useState<string>("");
+  const [outOfScope, setOutOfScope] = React.useState<string>("");
 
   // Step 4: Business Context & Protocol Intent ("Business Goals")
   const [businessGoals, setBusinessGoals] = React.useState({
-    protocolOverview:
-      "Automated constant-product decentralized exchange (AMM) allowing permissionless ERC-20 token swaps, pair creation, and liquidity pooling.",
-    economicModel:
-      "Traders pay a 0.30% fee on every token swap. 0.25% accrues directly into pool reserves to incentivize LP token holders; 0.05% can be diverted to protocol treasury if feeTo is configured.",
-    privilegedRoles:
-      "feeToSetter is the only administrative authority, controlled by a governance multisig with a 48-hour timelock. No admin key can withdraw pool reserves or freeze trading.",
-    criticalInvariants:
-      "A liquidity provider must NEVER be able to drain more underlying reserves than their proportional LP share. Pool reserves must remain strictly solvent and unfreezable.",
-    externalDependencies:
-      "Interacts with arbitrary external ERC-20 contracts. Reentrancy on non-standard transfer callbacks or rebasing tokens must not corrupt reserves accounting.",
+    protocolOverview: "",
+    economicModel: "",
+    privilegedRoles: "",
+    criticalInvariants: "",
+    externalDependencies: "",
   });
 
   // Submission State
@@ -334,7 +321,9 @@ export default function NewAuditRequestPage() {
   const handleSelectGithubRepo = async (repo: GithubRepoItem) => {
     setSelectedRepo(repo);
     setCustomGithubUrl(repo.htmlUrl || `https://github.com/${repo.fullName}`);
-    setProtocolName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+    if (!protocolName.trim()) {
+      setProtocolName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+    }
     const branchToUse = repo.defaultBranch || "main";
     setSelectedBranch(branchToUse);
 
@@ -345,31 +334,52 @@ export default function NewAuditRequestPage() {
     await fetchContractsForRepo(repo.fullName, activeBranch);
   };
 
-  // 1-Click Load Open Source Test Project
+  // 1-Click Load Curated Test Benchmark Project
   const handleLoadTestProject = async () => {
     setScopeMode("test");
     setSelectedRepo(null);
-    setCustomGithubUrl("https://github.com/Uniswap/v2-core");
-    setSelectedBranch("master");
-    setAvailableBranches(["master", "dev", "staging"]);
-    setProtocolName("Uniswap V2 Core");
-    setContractFileName(defaultTestContract.fileName);
-    setContractAddress("0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f");
+    const testUrl = "https://github.com/Zyron-Org/zyron-test-protocol";
+    setCustomGithubUrl(testUrl);
+    setSelectedBranch("main");
+    setAvailableBranches(["main"]);
+    setProtocolName("Zyron Test Protocol");
+    setContractFileName("contracts/VaultCore.sol");
+    setContractAddress("");
     setCompilerVersion("v0.8.20");
     setNetwork("Ethereum Mainnet (1)");
-    setGitCommit(defaultTestContract.commit);
-    setSourceCode(defaultTestContract.sourceCode);
-    setAvailableContracts(["contracts/UniswapV2Pair.sol", "contracts/UniswapV2Factory.sol", "contracts/UniswapV2ERC20.sol"]);
+    setAvailableContracts([
+      "contracts/VaultCore.sol",
+      "contracts/PriceOracleAdapter.sol",
+      "contracts/RewardDistributor.sol",
+      "contracts/interfaces/IERC20.sol",
+      "contracts/interfaces/IVault.sol",
+    ]);
     setRepoHasBlockchainFiles(true);
     setRepoInspectionMessage(null);
 
-    toast.success("Loaded open-source test project: Uniswap V2 Core");
+    toast.info("Inspecting Zyron Test Protocol benchmark repository...");
+    await fetchContractsForRepo("Zyron-Org/zyron-test-protocol", "main");
   };
 
   // Manual Fetch GitHub URL
   const handleManualFetch = async () => {
     const url = customGithubUrl.trim();
-    if (!url) return;
+    if (!url) {
+      toast.error("Please enter a GitHub repository URL.");
+      return;
+    }
+
+    // Auto-suggest protocol name ONLY if user hasn't typed one yet
+    if (!protocolName.trim()) {
+      const match = url.match(/github\.com\/[^\/]+\/([^\/]+)/);
+      if (match && match[1]) {
+        const repoSlug = match[1].replace(/\.git$/, "");
+        const formatted = repoSlug
+          .replace(/[-_]/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        setProtocolName(formatted);
+      }
+    }
 
     toast.info(`Fetching repository scope for ${url}...`);
     setSelectedRepo(null);
@@ -381,8 +391,8 @@ export default function NewAuditRequestPage() {
 
   // Handle contract select in Step 2
   const handleContractFileSelect = async (filePath: string) => {
-    let owner = "Uniswap";
-    let repo = "v2-core";
+    let owner = "";
+    let repo = "";
 
     if (selectedRepo) {
       const parts = selectedRepo.fullName.split("/");
@@ -396,7 +406,11 @@ export default function NewAuditRequestPage() {
       }
     }
 
-    await fetchFileContent(owner, repo, filePath, selectedBranch);
+    if (owner && repo) {
+      await fetchFileContent(owner, repo, filePath, selectedBranch);
+    } else {
+      setContractFileName(filePath.split("/").pop() || filePath);
+    }
   };
 
   // Submit Audit Request
@@ -404,6 +418,12 @@ export default function NewAuditRequestPage() {
     if (!user) {
       toast.error("Authentication Required: Please sign in to submit an audit request.");
       router.push("/auth/login");
+      return;
+    }
+
+    if (!protocolName.trim()) {
+      toast.error("Protocol / Project Name is required. Please specify your project name.");
+      setCurrentStep(2);
       return;
     }
 
@@ -647,12 +667,12 @@ export default function NewAuditRequestPage() {
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="font-semibold text-xs text-text-primary">
-                      Test Project (1-Click)
+                      Test Benchmark (1-Click)
                     </span>
-                    <Badge severity="resolved" size="sm">Recommended</Badge>
+                    <Badge severity="informational" size="sm">Demo</Badge>
                   </div>
                   <p className="text-[11px] text-text-muted leading-relaxed">
-                    Instantly load Uniswap V2 Core with verified contracts, commit SHA, and AST test files.
+                    Load the Zyron Vulnerable DeFi benchmark with multi-file contracts (VaultCore, PriceOracleAdapter, RewardDistributor).
                   </p>
                 </button>
 
@@ -1029,21 +1049,51 @@ export default function NewAuditRequestPage() {
 
               {/* Form Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Primary Contract File (Auto-filled) */}
+                {/* 1. Protocol / Project Name (Primary Required Input) */}
+                <div className="space-y-1.5 sm:col-span-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
+                      <Terminal className="h-3.5 w-3.5 text-accent-scan" />
+                      Protocol / Project Name <span className="text-signal-critical">*</span>
+                    </label>
+                    <span className="text-[10px] text-text-muted">Required project identifier</span>
+                  </div>
+                  <input
+                    type="text"
+                    value={protocolName}
+                    onChange={(e) => setProtocolName(e.target.value)}
+                    placeholder="e.g. Aura Core Protocol"
+                    required
+                    className={cn(
+                      "w-full h-10 px-3.5 rounded-xl bg-white dark:bg-bg-panel text-xs text-text-primary focus:outline-hidden focus:ring-1 shadow-2xs",
+                      protocolName.trim().length > 0
+                        ? "border border-border-hairline focus:ring-accent-scan"
+                        : "border border-amber-500/60 focus:ring-amber-500"
+                    )}
+                  />
+                  {!protocolName.trim() && (
+                    <span className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1 font-medium pt-0.5">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      Please name your protocol or audit project before continuing
+                    </span>
+                  )}
+                </div>
+
+                {/* 2. Primary Contract File (Auto-filled or selected from repo) */}
                 <div className="space-y-1.5 sm:col-span-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
                       <FileCode2 className="h-3.5 w-3.5 text-accent-scan" />
-                      Primary Contract Filename (Entrypoint)
+                      Primary Contract Filename (Entrypoint) <span className="text-signal-critical">*</span>
                     </label>
-                    <span className="text-[10px] text-text-muted">Auto-detected from repository</span>
+                    <span className="text-[10px] text-text-muted">Detected from repository</span>
                   </div>
 
                   <input
                     type="text"
                     value={contractFileName}
                     onChange={(e) => setContractFileName(e.target.value)}
-                    placeholder="e.g. UniswapV2Pair.sol"
+                    placeholder="e.g. VaultCore.sol"
                     className={cn(
                       "w-full h-10 px-3.5 rounded-xl bg-white dark:bg-bg-panel font-mono text-xs text-text-primary focus:outline-hidden focus:ring-1 shadow-2xs",
                       isBlockchainContract(contractFileName)
@@ -1064,7 +1114,7 @@ export default function NewAuditRequestPage() {
                       <span className="text-[11px] text-text-muted">Available in repo:</span>
                       {availableContracts.map((c) => {
                         const base = c.split("/").pop() || c;
-                        const isSelected = contractFileName === base;
+                        const isSelected = contractFileName === base || contractFileName === c;
                         return (
                           <button
                             key={c}
@@ -1085,21 +1135,7 @@ export default function NewAuditRequestPage() {
                   )}
                 </div>
 
-                {/* Protocol Name */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-text-primary block">
-                    Protocol / Project Name
-                  </label>
-                  <input
-                    type="text"
-                    value={protocolName}
-                    onChange={(e) => setProtocolName(e.target.value)}
-                    placeholder="e.g. Uniswap V2 Core"
-                    className="w-full h-9 px-3 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline text-xs text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-scan"
-                  />
-                </div>
-
-                {/* Network */}
+                {/* Target Blockchain Network */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-text-primary block">
                     Target Blockchain Network
@@ -1140,19 +1176,19 @@ export default function NewAuditRequestPage() {
                 {/* Git Commit */}
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-text-primary block">
-                    Target Git Commit SHA
+                    Target Git Commit SHA (Optional)
                   </label>
                   <input
                     type="text"
                     value={gitCommit}
                     onChange={(e) => setGitCommit(e.target.value)}
-                    placeholder="8f9b2d4..."
+                    placeholder="e.g. 8f9b2d4 (auto-detected from repo)"
                     className="w-full h-9 px-3 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline text-xs font-mono text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-scan"
                   />
                 </div>
 
                 {/* Deployed Address */}
-                <div className="space-y-1.5 sm:col-span-2">
+                <div className="space-y-1.5">
                   <label className="text-xs font-medium text-text-primary block">
                     Deployed Contract Address (Optional)
                   </label>
@@ -1160,8 +1196,8 @@ export default function NewAuditRequestPage() {
                     type="text"
                     value={contractAddress}
                     onChange={(e) => setContractAddress(e.target.value)}
-                    placeholder="0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f"
-                    className="w-full h-9 px-3 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline text-xs font-mono text-text-primary focus:outline-hidden focus:ring-1 focus:ring-accent-scan"
+                    placeholder="0x... (Optional if not yet deployed)"
+                    className="w-full h-9 px-3 rounded-xl bg-white dark:bg-bg-panel border border-border-hairline text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-hidden focus:ring-1 focus:ring-accent-scan"
                   />
                 </div>
               </div>
@@ -1177,7 +1213,13 @@ export default function NewAuditRequestPage() {
                   </span>
                 </div>
                 <div className="h-44 overflow-y-auto rounded-xl bg-bg-void p-3 font-mono text-xs text-text-primary border border-border-hairline leading-relaxed">
-                  <pre>{sourceCode}</pre>
+                  {sourceCode ? (
+                    <pre>{sourceCode}</pre>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-text-muted italic">
+                      Select or enter a contract file above to view source code preview & SLOC.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1196,8 +1238,12 @@ export default function NewAuditRequestPage() {
               variant="accent"
               rounded="xl"
               size="md"
-              disabled={!isBlockchainContract(contractFileName)}
+              disabled={!isBlockchainContract(contractFileName) || !protocolName.trim()}
               onClick={() => {
+                if (!protocolName.trim()) {
+                  toast.error("Please enter a Protocol / Project Name before continuing.");
+                  return;
+                }
                 if (!isBlockchainContract(contractFileName)) {
                   toast.error("Please enter a valid smart contract filename (.sol, .vy, .rs, .cairo, .move, .yul, .tact)");
                   return;
@@ -1624,21 +1670,35 @@ export default function NewAuditRequestPage() {
                     <Sparkles className="h-4 w-4 text-accent-scan" />
                     Business Goals & Protocol Intent
                   </span>
-                  <Badge severity="resolved" size="sm">Attached for Reviewer & AI</Badge>
+                  <Badge severity={businessGoals.protocolOverview ? "resolved" : "informational"} size="sm">
+                    {businessGoals.protocolOverview ? "Attached for Reviewer & AI" : "Optional / None Provided"}
+                  </Badge>
                 </div>
-                <p className="text-xs text-text-muted italic leading-relaxed">
-                  &ldquo;{businessGoals.protocolOverview}&rdquo;
-                </p>
-                <div className="pt-1 text-[11px] text-text-muted space-y-1">
-                  <div>
-                    <strong className="text-text-primary">Worst-Case Prevention:</strong>{" "}
-                    {businessGoals.criticalInvariants}
+                {businessGoals.protocolOverview ? (
+                  <p className="text-xs text-text-muted italic leading-relaxed">
+                    &ldquo;{businessGoals.protocolOverview}&rdquo;
+                  </p>
+                ) : (
+                  <p className="text-xs text-text-muted italic leading-relaxed">
+                    No custom business overview provided. Scan and verification will evaluate smart contract AST invariants and taint analysis.
+                  </p>
+                )}
+                {(businessGoals.criticalInvariants || businessGoals.privilegedRoles) && (
+                  <div className="pt-1 text-[11px] text-text-muted space-y-1">
+                    {businessGoals.criticalInvariants && (
+                      <div>
+                        <strong className="text-text-primary">Worst-Case Prevention:</strong>{" "}
+                        {businessGoals.criticalInvariants}
+                      </div>
+                    )}
+                    {businessGoals.privilegedRoles && (
+                      <div>
+                        <strong className="text-text-primary">Admin Model:</strong>{" "}
+                        {businessGoals.privilegedRoles}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <strong className="text-text-primary">Admin Model:</strong>{" "}
-                    {businessGoals.privilegedRoles}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
