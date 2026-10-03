@@ -110,10 +110,12 @@ const normalizeStatus = (stage?: string): PipelineStatus => {
     s === "scanning" ||
     s === "in-review" ||
     s === "corrections-requested" ||
-    s === "completed" ||
-    s === "failed"
+    s === "completed"
   ) {
     return s as PipelineStatus;
+  }
+  if (s === "failed") {
+    return "scanning";
   }
   return "pending";
 };
@@ -651,28 +653,7 @@ export default function AuditStatusTrackerPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans">
-      {/* ─── CLIENT STATUS: EXTENDED VERIFICATION IN PROGRESS ─── */}
-      {rawStage === "FAILED" && (
-        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-2 sm:p-2.5 shadow-xs animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-bg-panel rounded-xl p-5 border border-amber-500/20 space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-amber-500 font-bold text-sm">
-                <ShieldAlert className="h-5 w-5" />
-                <span>Extended Security Verification in Progress</span>
-              </div>
-              <Badge severity="warning" size="sm">
-                IN REVIEW
-              </Badge>
-            </div>
-            <p className="text-text-primary text-xs leading-relaxed font-sans font-medium">
-              Our automated AST and EVM verification engine has routed this engagement to our senior security auditors for comprehensive manual verification.
-            </p>
-            <p className="text-text-muted text-[11px] leading-relaxed">
-              No action is required on your part. Detailed findings will be published directly to your dashboard once auditor verification concludes.
-            </p>
-          </div>
-        </div>
-      )}
+
 
       {/* ─── 1. TOP HEADER & BREADCRUMBS ─── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

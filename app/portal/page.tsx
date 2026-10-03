@@ -64,19 +64,18 @@ interface FormattedAudit {
 function normalizeStage(stage: string): PipelineStatus {
   const s = stage?.toUpperCase();
   if (s === "PENDING") return "pending";
-  if (s === "SCANNING") return "scanning";
+  if (s === "SCANNING" || s === "FAILED") return "scanning";
   if (s === "IN_REVIEW") return "in-review";
   if (s === "CORRECTIONS_REQUESTED") return "corrections-requested";
   if (s === "COMPLETED") return "completed";
-  if (s === "FAILED") return "in-review"; // Under engineer review in client view
   return (stage ? stage.toLowerCase() : "pending") as PipelineStatus;
 }
 
 function getStageNumber(stage: string): number {
   const s = stage?.toUpperCase();
   if (s === "PENDING") return 1;
-  if (s === "SCANNING") return 2;
-  if (s === "IN_REVIEW" || s === "CORRECTIONS_REQUESTED" || s === "FAILED") return 3;
+  if (s === "SCANNING" || s === "FAILED") return 2;
+  if (s === "IN_REVIEW" || s === "CORRECTIONS_REQUESTED") return 3;
   if (s === "COMPLETED") return 4;
   return 1;
 }
