@@ -735,8 +735,8 @@ export default function OpenFindingsPage() {
                         <EvmTraceStepper
                           findingId={finding.id}
                           title={finding.title}
-                          verdict={finding.fuzzTestStatus || (finding.severity === "critical" ? "PROVEN_EXPLOIT" : "PROVEN_FALSE_POSITIVE")}
-                          fundsDrainedEth={finding.severity === "critical" ? 100 : 0}
+                          verdict={finding.fuzzTestStatus || (finding.falsePositive ? "PROVEN_FALSE_POSITIVE" : undefined)}
+                          fundsDrainedEth={finding.fuzzTestStatus === "PROVEN_EXPLOIT" ? 100 : 0}
                           traceSteps={finding.traceSteps}
                           synthesizedPoC={finding.synthesizedPoC}
                         />

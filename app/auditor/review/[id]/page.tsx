@@ -1887,8 +1887,8 @@ mitigated or verified false positives before production deployment.
                     <EvmTraceStepper
                       findingId={selectedFinding.id}
                       title={selectedFinding.title}
-                      verdict={selectedFinding.fuzzTestStatus || (selectedFinding.falsePositive ? "PROVEN_FALSE_POSITIVE" : (selectedFinding.severity === "critical" || selectedFinding.severity === "high") ? "PROVEN_EXPLOIT" : "PROVEN_FALSE_POSITIVE")}
-                      fundsDrainedEth={(selectedFinding.fuzzTestStatus === "PROVEN_FALSE_POSITIVE" || selectedFinding.falsePositive) ? 0 : (selectedFinding.severity === "critical" ? 100 : 0)}
+                      verdict={selectedFinding.fuzzTestStatus || (selectedFinding.falsePositive ? "PROVEN_FALSE_POSITIVE" : undefined)}
+                      fundsDrainedEth={selectedFinding.fuzzTestStatus === "PROVEN_EXPLOIT" ? 100 : 0}
                       traceSteps={selectedFinding.traceSteps}
                       synthesizedPoC={selectedFinding.synthesizedPoC}
                       onRunProver={handleRunProver}
