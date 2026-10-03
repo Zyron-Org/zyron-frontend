@@ -485,26 +485,52 @@ contract ${baseName} {
       });
     };
 
+    // Helper to resolve any path string to a canonical repo path
+    const resolveCanonicalPath = (raw: string): string => {
+      let p = raw.trim().replace(/\\/g, "/").replace(/^\.?\//, "");
+      if (!p) return primaryPath;
+
+      // If exact match in repoFileList, return it
+      if (repoFileList.includes(p)) return p;
+
+      // If repoFileList has a path ending with /p or matching p basename
+      const matchInRepo = repoFileList.find(
+        (rp) => rp === p || rp.endsWith("/" + p) || (!p.includes("/") && rp.split("/").pop() === p)
+      );
+      if (matchInRepo) return matchInRepo;
+
+      // Check if primaryPath matches
+      if (p === primaryPath || primaryPath.endsWith("/" + p) || p === fname) {
+        return primaryPath;
+      }
+
+      // If no folder prefix, default to contracts/
+      if (!p.includes("/")) {
+        return `contracts/${p}`;
+      }
+      return p;
+    };
+
     // Collect all unique candidate paths
     const pathSet = new Set<string>();
-    pathSet.add(primaryPath);
 
+    // 1. All files from repoFileList (real GitHub repo tree)
     repoFileList.forEach((p) => {
-      if (p && p.trim()) pathSet.add(p.trim());
+      if (p && p.trim()) pathSet.add(p.trim().replace(/\\/g, "/").replace(/^\.?\//, ""));
     });
 
+    // 2. Primary path
+    pathSet.add(resolveCanonicalPath(primaryPath));
+
+    // 3. All files present in repoFilesMap
     Object.keys(repoFilesMap).forEach((p) => {
-      if (p && p.trim()) pathSet.add(p.trim());
+      if (p && p.trim()) pathSet.add(resolveCanonicalPath(p));
     });
 
+    // 4. Any files referenced in findings
     findings.forEach((f) => {
       if (f.file && f.file.trim()) {
-        const norm = f.file.trim();
-        if (!norm.includes("/") && primaryPath.endsWith("/" + norm)) {
-          pathSet.add(primaryPath);
-        } else {
-          pathSet.add(norm.includes("/") ? norm : `contracts/${norm}`);
-        }
+        pathSet.add(resolveCanonicalPath(f.file));
       }
     });
 
