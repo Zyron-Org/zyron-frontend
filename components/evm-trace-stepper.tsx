@@ -108,6 +108,64 @@ const DEFAULT_DEMO_TRACE: TraceStep[] = [
   },
 ];
 
+const DEFAULT_FALSE_POSITIVE_TRACE: TraceStep[] = [
+  {
+    stepIndex: 1,
+    type: "SETUP",
+    from: "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 (Deployer)",
+    to: "0x5FbDB2315678afecb367f032d93F642f64180aa3 (TargetContract)",
+    functionCalled: "constructor()",
+    valueWei: "0",
+    gasUsed: 421000,
+    success: true,
+    stateChangeSummary: "Target deployed with 100.0 ETH pool liquidity.",
+  },
+  {
+    stepIndex: 2,
+    type: "CALL",
+    from: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (ExploitContract)",
+    to: "0x5FbDB2315678afecb367f032d93F642f64180aa3 (TargetContract)",
+    functionCalled: "deposit()",
+    valueWei: "1000000000000000000",
+    gasUsed: 45000,
+    success: true,
+    stateChangeSummary: "Attacker deposited 1.0 ETH to create accounting shares.",
+  },
+  {
+    stepIndex: 3,
+    type: "CALL",
+    from: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (ExploitContract)",
+    to: "0x5FbDB2315678afecb367f032d93F642f64180aa3 (TargetContract)",
+    functionCalled: "safeEmergencyWithdraw()",
+    valueWei: "0",
+    gasUsed: 62000,
+    success: true,
+    stateChangeSummary: "Checks-Effects: shares deducted, nonReentrant mutex _locked = true, transfer dispatched.",
+  },
+  {
+    stepIndex: 4,
+    type: "REENTRANT_CALL",
+    from: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (receive() Fallback)",
+    to: "0x5FbDB2315678afecb367f032d93F642f64180aa3 (TargetContract)",
+    functionCalled: "safeEmergencyWithdraw()",
+    valueWei: "0",
+    gasUsed: 12000,
+    success: true,
+    stateChangeSummary: "Attacker fallback intercepts execution and attempts reentrant invocation.",
+  },
+  {
+    stepIndex: 5,
+    type: "REVERT",
+    from: "0x5FbDB2315678afecb367f032d93F642f64180aa3 (TargetContract)",
+    to: "0x70997970C51812dc3A010C7d01b50e0d17dc79C8 (ExploitContract)",
+    functionCalled: "safeEmergencyWithdraw()",
+    valueWei: "0",
+    gasUsed: 8500,
+    success: false,
+    stateChangeSummary: "Transaction REVERTED with reason: 'LOCKED'. nonReentrant mutex held. 0.0 ETH drained.",
+  },
+];
+
 export function EvmTraceStepper({
   findingId,
   title,
@@ -139,17 +197,19 @@ export function EvmTraceStepper({
       }));
     };
 
-    if (!traceSteps) return DEFAULT_DEMO_TRACE;
+    const fallbackTrace = verdict === "PROVEN_FALSE_POSITIVE" ? DEFAULT_FALSE_POSITIVE_TRACE : DEFAULT_DEMO_TRACE;
+
+    if (!traceSteps) return fallbackTrace;
     if (Array.isArray(traceSteps)) {
-      return traceSteps.length > 0 ? normalize(traceSteps) : DEFAULT_DEMO_TRACE;
+      return traceSteps.length > 0 ? normalize(traceSteps) : fallbackTrace;
     }
     try {
       const parsed = JSON.parse(traceSteps);
-      return Array.isArray(parsed) && parsed.length > 0 ? normalize(parsed) : DEFAULT_DEMO_TRACE;
+      return Array.isArray(parsed) && parsed.length > 0 ? normalize(parsed) : fallbackTrace;
     } catch {
-      return DEFAULT_DEMO_TRACE;
+      return fallbackTrace;
     }
-  }, [traceSteps]);
+  }, [traceSteps, verdict]);
 
   // Keep index within range
   const currentStep = steps[currentStepIndex] || steps[0];
