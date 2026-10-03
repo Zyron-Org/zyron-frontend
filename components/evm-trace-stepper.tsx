@@ -22,10 +22,12 @@ import {
   Flame,
   Radio,
   FileCode,
+  Brain,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { AgentFlowDrawer } from "@/components/agent-flow-drawer";
 
 export interface TraceStep {
   stepIndex: number;
@@ -42,6 +44,7 @@ export interface TraceStep {
 export interface EvmTraceStepperProps {
   findingId?: string;
   title?: string;
+  findingSeverity?: string;
   verdict?: "PROVEN_EXPLOIT" | "PROVEN_FALSE_POSITIVE" | "CANNOT_REPRODUCE" | "QUEUED" | "RUNNING" | string;
   fundsDrainedEth?: number;
   traceSteps?: TraceStep[] | string;
@@ -53,6 +56,7 @@ export interface EvmTraceStepperProps {
 export function EvmTraceStepper({
   findingId,
   title,
+  findingSeverity,
   verdict,
   fundsDrainedEth,
   traceSteps,
@@ -63,6 +67,7 @@ export function EvmTraceStepper({
   const [activeTab, setActiveTab] = React.useState<"stepper" | "poc">("stepper");
   const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isLogsOpen, setIsLogsOpen] = React.useState(false);
   const [copied, setCopied] = React.useState(false);
 
   // Parse steps if JSON string and normalize naming - returns empty array if no real trace recorded
@@ -232,6 +237,18 @@ export function EvmTraceStepper({
               PoC Contract {synthesizedPoC && "✓"}
             </button>
           </div>
+
+          {findingId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsLogsOpen(true)}
+              className="h-7 text-[11px] px-2.5 text-text-primary border-gray-300 dark:border-border-hairline hover:bg-gray-100 dark:hover:bg-white/5 font-sans"
+              leftIcon={<Brain className="h-3 w-3 text-purple-400" />}
+            >
+              Agent Flow
+            </Button>
+          )}
 
           {onRunProver && (
             <Button
@@ -603,6 +620,17 @@ export function EvmTraceStepper({
           )}
         </div>
       )}
+
+      {/* Autonomous AI Agent Execution Flow Drawer */}
+      <AgentFlowDrawer
+        isOpen={isLogsOpen}
+        onClose={() => setIsLogsOpen(false)}
+        findingId={findingId}
+        findingTitle={title}
+        findingSeverity={findingSeverity}
+        verdict={verdict}
+        fundsDrainedEth={fundsDrainedEth}
+      />
     </div>
   );
 }

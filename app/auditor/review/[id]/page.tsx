@@ -101,6 +101,7 @@ interface TriageFinding {
   traceSteps?: string | any[];
   synthesizedPoC?: string;
   fuzzTestStatus?: string;
+  fundsDrainedEth?: number;
 }
 
 interface FindingComment {
@@ -354,6 +355,7 @@ export default function AuditorCodeReviewPage() {
           traceSteps: f.traceSteps,
           synthesizedPoC: f.synthesizedPoC,
           fuzzTestStatus: f.fuzzTestStatus,
+          fundsDrainedEth: typeof f.fundsDrainedEth === "number" ? f.fundsDrainedEth : 0,
         }));
 
         setFindings(realFindings);
@@ -1887,8 +1889,9 @@ mitigated or verified false positives before production deployment.
                     <EvmTraceStepper
                       findingId={selectedFinding.id}
                       title={selectedFinding.title}
+                      findingSeverity={selectedFinding.severity}
                       verdict={selectedFinding.fuzzTestStatus || (selectedFinding.falsePositive ? "PROVEN_FALSE_POSITIVE" : undefined)}
-                      fundsDrainedEth={selectedFinding.fuzzTestStatus === "PROVEN_EXPLOIT" ? 100 : 0}
+                      fundsDrainedEth={selectedFinding.fundsDrainedEth ?? 0}
                       traceSteps={selectedFinding.traceSteps}
                       synthesizedPoC={selectedFinding.synthesizedPoC}
                       onRunProver={handleRunProver}

@@ -68,6 +68,7 @@ interface DetailedFinding {
   vulnerableLines?: string;
   remediatedCode?: string;
   fuzzTestStatus?: string;
+  fundsDrainedEth?: number;
   remediationNote?: string;
   foundBy?: string;
   traceSteps?: string;
@@ -161,6 +162,7 @@ export default function AuditStatusTrackerPage() {
               vulnerableLines: f.vulnerableLines || undefined,
               remediatedCode: f.remediatedCode || undefined,
               fuzzTestStatus: f.fuzzTestStatus || undefined,
+              fundsDrainedEth: typeof f.fundsDrainedEth === "number" ? f.fundsDrainedEth : 0,
               traceSteps: f.traceSteps || undefined,
               synthesizedPoC: f.synthesizedPoC || undefined,
               remediationNote: f.remediationNote || undefined,
@@ -1399,8 +1401,9 @@ export default function AuditStatusTrackerPage() {
                           <EvmTraceStepper
                             findingId={finding.id}
                             title={finding.title}
+                            findingSeverity={finding.severity}
                             verdict={finding.fuzzTestStatus || (finding.falsePositive ? "PROVEN_FALSE_POSITIVE" : undefined)}
-                            fundsDrainedEth={finding.fuzzTestStatus === "PROVEN_EXPLOIT" ? 100 : 0}
+                            fundsDrainedEth={finding.fundsDrainedEth ?? 0}
                             traceSteps={finding.traceSteps}
                             synthesizedPoC={finding.synthesizedPoC}
                           />
