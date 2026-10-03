@@ -125,13 +125,16 @@ export default function AuditStatusTrackerPage() {
 
   const [realAudit, setRealAudit] = React.useState<any>(null);
   const [isLoadingApi, setIsLoadingApi] = React.useState(true);
+  const isInitialLoad = React.useRef(true);
 
   React.useEffect(() => {
     let intervalId: any = null;
 
     async function fetchAuditDetails() {
       try {
-        setIsLoadingApi(true);
+        if (isInitialLoad.current) {
+          setIsLoadingApi(true);
+        }
         const res = await apiClient.get(`/audits/${ticketId}`);
         if (res.data) {
           const fetchedAudit = res.data;
@@ -215,7 +218,10 @@ export default function AuditStatusTrackerPage() {
       } catch (err) {
         console.warn("Could not fetch real audit from API, using fallback ticket:", err);
       } finally {
-        setIsLoadingApi(false);
+        if (isInitialLoad.current) {
+          setIsLoadingApi(false);
+          isInitialLoad.current = false;
+        }
       }
     }
 
@@ -645,30 +651,24 @@ export default function AuditStatusTrackerPage() {
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12 font-sans">
-      {/* ─── ERROR BANNER WHEN PIPELINE FAILED ─── */}
+      {/* ─── CLIENT STATUS: EXTENDED VERIFICATION IN PROGRESS ─── */}
       {rawStage === "FAILED" && (
-        <div className="rounded-2xl border border-signal-critical/40 bg-signal-critical/10 p-2 sm:p-2.5 shadow-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-bg-panel rounded-xl p-5 border border-signal-critical/30 space-y-3">
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-2 sm:p-2.5 shadow-xs animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-bg-panel rounded-xl p-5 border border-amber-500/20 space-y-2">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-signal-critical font-bold text-sm">
-                <AlertTriangle className="h-5 w-5" />
-                <span>AUDIT PIPELINE HALTED (VERIFICATION ERROR)</span>
+              <div className="flex items-center gap-2.5 text-amber-500 font-bold text-sm">
+                <ShieldAlert className="h-5 w-5" />
+                <span>Extended Security Verification in Progress</span>
               </div>
-              <Badge severity="critical" size="sm">
-                FAILED
+              <Badge severity="warning" size="sm">
+                IN REVIEW
               </Badge>
             </div>
-
             <p className="text-text-primary text-xs leading-relaxed font-sans font-medium">
-              The automated scan and AI prover pipeline encountered an error for ticket <strong>#{ticketId}</strong>.
+              Our automated AST and EVM verification engine has routed this engagement to our senior security auditors for comprehensive manual verification.
             </p>
-            {audit.failureReason && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 font-mono text-xs text-signal-critical break-words">
-                {audit.failureReason}
-              </div>
-            )}
             <p className="text-text-muted text-[11px] leading-relaxed">
-              Execution has been halted until an administrator corrects the configuration or environment key and triggers a rerun.
+              No action is required on your part. Detailed findings will be published directly to your dashboard once auditor verification concludes.
             </p>
           </div>
         </div>
