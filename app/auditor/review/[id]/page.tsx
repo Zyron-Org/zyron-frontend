@@ -128,14 +128,14 @@ export default function AuditorCodeReviewPage() {
   // Real audit data from the backend
   const [auditData, setAuditData] = React.useState<AuditRequest | null>(null);
   const [fetchedSourceCode, setFetchedSourceCode] = React.useState<string | null>(null);
+  const [repoFileList, setRepoFileList] = React.useState<string[]>([]);
+  const [repoFilesMap, setRepoFilesMap] = React.useState<Record<string, string>>({});
   const [dataLoading, setDataLoading] = React.useState(true);
 
   // File Tree Explorer visibility
   const [showFileTree, setShowFileTree] = React.useState(true);
   const [expandedFolders, setExpandedFolders] = React.useState<Record<string, boolean>>({
     contracts: true,
-    interfaces: true,
-    libraries: true,
   });
 
   const toggleFolder = (folder: string) => {
@@ -276,6 +276,9 @@ export default function AuditorCodeReviewPage() {
           failureReason: a.failureReason,
           onChainTxHash: a.onChainTxHash,
           onChainChainId: a.onChainChainId,
+          githubRepoUrl: a.githubRepoUrl || (a.protocolName?.includes('/') ? a.protocolName : undefined),
+          githubBranch: a.githubBranch || "main",
+          sourceCode: a.sourceCode,
         } as AuditRequest;
 
         setAuditData(auditObj);
@@ -288,43 +291,71 @@ export default function AuditorCodeReviewPage() {
         // 1. Direct source code from backend database
         if (a.sourceCode && a.sourceCode.trim().length > 0) {
           setFetchedSourceCode(a.sourceCode);
-        } else {
-          // 2. Fetch from GitHub repository via API
-          const repoStr = a.githubRepoUrl || a.protocolName || "";
-          let owner = "";
-          let repo = "";
-          if (repoStr.includes("github.com")) {
-            const match = repoStr.match(/github\.com\/([^\/]+)\/([^\/]+)/);
-            if (match) {
-              owner = match[1];
-              repo = match[2].replace(/\.git$/, "");
-            }
-          } else if (repoStr.includes("/")) {
-            const parts = repoStr.split("/");
-            if (parts.length === 2) {
-              owner = parts[0].trim();
-              repo = parts[1].trim().replace(/\.git$/, "");
-            }
-          }
+          setRepoFilesMap((prev) => ({
+            ...prev,
+            [targetFile]: a.sourceCode,
+            [defaultPath]: a.sourceCode,
+          }));
+        }
 
-          if (owner && repo) {
-            apiClient
-              .get("/integrations/github/file-content", {
-                params: {
-                  owner,
-                  repo,
-                  repoUrl: a.githubRepoUrl,
-                  filePath: targetFile,
-                  branch: a.githubBranch || "main",
-                },
-              })
-              .then((rawRes) => {
-                if (rawRes.data?.content) {
-                  setFetchedSourceCode(rawRes.data.content);
-                }
-              })
-              .catch(() => null);
-          }
+        // 2. Fetch full repository tree from GitHub if available
+        const effectiveRepoUrl = a.githubRepoUrl || (a as any).repositoryUrl || (a.protocolName?.includes('/') ? a.protocolName : undefined);
+        const branch = a.githubBranch || "main";
+
+        if (effectiveRepoUrl) {
+          apiClient
+            .get("/integrations/github/contracts", {
+              params: {
+                repoUrl: effectiveRepoUrl,
+                branch,
+              },
+            })
+            .then((contractsRes) => {
+              if (contractsRes.data?.contracts && Array.isArray(contractsRes.data.contracts)) {
+                const cList: string[] = contractsRes.data.contracts;
+                setRepoFileList((prev) => Array.from(new Set([...prev, ...cList])));
+
+                // Auto-expand all discovered folders in file tree
+                const folderSet: Record<string, boolean> = { contracts: true };
+                cList.forEach((cp) => {
+                  if (cp.includes("/")) {
+                    const fld = cp.substring(0, cp.lastIndexOf("/"));
+                    folderSet[fld] = true;
+                  }
+                });
+                setExpandedFolders((prev) => ({ ...prev, ...folderSet }));
+
+                // Fetch content for each contract
+                cList.forEach((cp) => {
+                  if (
+                    (cp === targetFile || cp === defaultPath || cp.endsWith("/" + targetFile)) &&
+                    a.sourceCode &&
+                    a.sourceCode.trim().length > 0
+                  ) {
+                    setRepoFilesMap((prev) => ({ ...prev, [cp]: a.sourceCode }));
+                    return;
+                  }
+                  apiClient
+                    .get("/integrations/github/file-content", {
+                      params: {
+                        repoUrl: effectiveRepoUrl,
+                        filePath: cp,
+                        branch,
+                      },
+                    })
+                    .then((contentRes) => {
+                      if (contentRes.data?.content) {
+                        setRepoFilesMap((prev) => ({ ...prev, [cp]: contentRes.data.content }));
+                        if (cp === targetFile || cp === defaultPath || cp.endsWith("/" + targetFile)) {
+                          setFetchedSourceCode(contentRes.data.content);
+                        }
+                      }
+                    })
+                    .catch(() => null);
+                });
+              }
+            })
+            .catch(() => null);
         }
 
       } else {
@@ -394,204 +425,197 @@ export default function AuditorCodeReviewPage() {
   const baseName = fname.replace(/\.sol$/, "");
   const primaryPath = fname.includes("/") ? fname : `contracts/${fname}`;
 
+  // On-demand fetch file content from GitHub repository
+  const fetchFileContent = React.useCallback(
+    async (filePath: string) => {
+      if (!filePath || repoFilesMap[filePath]) return;
+      const effectiveRepo =
+        auditData?.githubRepoUrl ||
+        (auditData as any)?.repositoryUrl ||
+        (auditData?.protocolName?.includes("/") ? auditData.protocolName : undefined);
+      const branch = auditData?.githubBranch || "main";
+      if (!effectiveRepo) return;
+
+      try {
+        const res = await apiClient.get("/integrations/github/file-content", {
+          params: { repoUrl: effectiveRepo, filePath, branch },
+        });
+        if (res.data?.content) {
+          setRepoFilesMap((prev) => ({
+            ...prev,
+            [filePath]: res.data.content,
+          }));
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch file content for ${filePath}:`, err);
+      }
+    },
+    [auditData?.githubRepoUrl, (auditData as any)?.repositoryUrl, auditData?.protocolName, auditData?.githubBranch, repoFilesMap]
+  );
+
+  React.useEffect(() => {
+    if (selectedFilePath && !repoFilesMap[selectedFilePath]) {
+      fetchFileContent(selectedFilePath);
+    }
+  }, [selectedFilePath, repoFilesMap, fetchFileContent]);
+
   // Multi-file Project Structure for the File Tree Explorer
   const projectFiles: ProjectFile[] = React.useMemo(() => {
     const defaultCode = `// SPDX-License-Identifier: MIT
 pragma solidity ${auditData?.compilerVersion?.replace('v', '^') || '^0.8.20'};
-
-import "./interfaces/I${baseName}.sol";
-import "./libraries/TransferHelper.sol";
 
 /**
  * @title ${auditData?.protocolName || baseName || "Smart Contract"}
  * @notice Primary smart contract under audit review
  * @dev Commit SHA: ${auditData?.gitCommit?.slice(0, 7) || "8f9b2d4"}
  */
-contract ${baseName} is I${baseName} {
-    using TransferHelper for address;
-
-    mapping(address => uint256) public override userBalances;
-    mapping(address => bool) public lockedPositions;
-    uint256 public override totalLocked;
-    address public owner;
-
-    constructor() {
-        owner = msg.sender;
-    }
-
-    function deposit() external payable override {
-        require(msg.value > 0, "Zero deposit");
-        userBalances[msg.sender] += msg.value;
-        totalLocked += msg.value;
-        emit Deposit(msg.sender, msg.value);
-    }
-
-    // Vulnerable function flagged in initial AST scan
-    function withdrawAll() external override {
-        uint256 amount = userBalances[msg.sender];
-        require(amount > 0, "No balance");
-        require(!lockedPositions[msg.sender], "Position locked");
-
-        // External low-level call before state update allows reentrancy exploit
-        (bool sent, ) = msg.sender.call{value: amount}("");
-        require(sent, "Transfer failed");
-
-        userBalances[msg.sender] = 0;
-        totalLocked -= amount;
-        emit Withdraw(msg.sender, amount);
-    }
-}`;
-
-    const matchingTestFile = OPEN_SOURCE_TEST_PROJECT.contractFiles.find(
-      (cf) => cf.fileName === fname || cf.path === fname || cf.path.endsWith("/" + fname)
-    );
-
-    const rawCode = fetchedSourceCode || matchingTestFile?.sourceCode || defaultCode;
-    const rawLines = rawCode.split("\n");
+contract ${baseName} {
+    // Contract implementation
+}
+`;
 
     const getFileFindings = (path: string, name: string) => {
-      return findings.filter(
-        (f) => (f.file.includes(name) || f.file.includes(path) || (path === primaryPath && !f.file.includes("/")))
-      );
+      return findings.filter((f) => {
+        if (!f.file) return false;
+        if (f.file === path || f.file === name) return true;
+        if (path.endsWith("/" + f.file) || f.file.endsWith("/" + path)) return true;
+        if (f.file.split("/").pop() === name) return true;
+        if (path === primaryPath && !f.file.includes("/")) return true;
+        return false;
+      });
     };
 
-    // Primary Contract
-    const primaryFindings = getFileFindings(primaryPath, fname);
-    const primaryLines = rawLines.map((line, idx) => {
-      const lineNum = idx + 1;
-      const findingOnLine = primaryFindings.find((f) => f.line === lineNum);
-      return {
-        line: lineNum,
-        code: line,
-        highlight: !!findingOnLine && !findingOnLine.falsePositive,
-        flag: findingOnLine ? (findingOnLine.severity.toUpperCase() as any) : undefined,
-        label: findingOnLine ? `${findingOnLine.swcId} ${findingOnLine.title}` : undefined,
-        findingId: findingOnLine?.id,
-      };
+    // Collect all unique candidate paths
+    const pathSet = new Set<string>();
+    pathSet.add(primaryPath);
+
+    repoFileList.forEach((p) => {
+      if (p && p.trim()) pathSet.add(p.trim());
     });
 
-    const primaryFile: ProjectFile = {
-      path: primaryPath,
-      name: fname,
-      folder: "contracts",
-      sloc: auditData?.sloc || rawLines.length,
-      hasFixDiff: true,
-      additions: 4,
-      deletions: 1,
-      diffLines: primaryLines.map((l) => ({
-        type: "context" as const,
-        oldLine: l.line,
-        newLine: l.line,
-        code: l.code,
-      })),
+    Object.keys(repoFilesMap).forEach((p) => {
+      if (p && p.trim()) pathSet.add(p.trim());
+    });
 
-      flags: primaryFindings.map((f) => ({
+    findings.forEach((f) => {
+      if (f.file && f.file.trim()) {
+        const norm = f.file.trim();
+        if (!norm.includes("/") && primaryPath.endsWith("/" + norm)) {
+          pathSet.add(primaryPath);
+        } else {
+          pathSet.add(norm.includes("/") ? norm : `contracts/${norm}`);
+        }
+      }
+    });
+
+    // If only 1 file and matching mock files exist, include mock repository files
+    if (pathSet.size <= 1) {
+      OPEN_SOURCE_TEST_PROJECT.contractFiles.forEach((cf) => {
+        if (cf.fileName === fname || cf.path === fname || cf.path.endsWith("/" + fname)) {
+          OPEN_SOURCE_TEST_PROJECT.contractFiles.forEach((f) => pathSet.add(f.path));
+        }
+      });
+    }
+
+    const fileList = Array.from(pathSet);
+
+    const generatedFiles: ProjectFile[] = fileList.map((filePath) => {
+      const fileName = filePath.split("/").pop() || filePath;
+      const folder = filePath.includes("/")
+        ? filePath.substring(0, filePath.lastIndexOf("/"))
+        : "contracts";
+
+      const matchingMock = OPEN_SOURCE_TEST_PROJECT.contractFiles.find(
+        (cf) => cf.path === filePath || cf.fileName === fileName
+      );
+
+      let rawCode =
+        repoFilesMap[filePath] ||
+        repoFilesMap[fileName] ||
+        matchingMock?.sourceCode;
+
+      if (!rawCode) {
+        if (filePath === primaryPath || fileName === fname) {
+          rawCode = fetchedSourceCode || defaultCode;
+        } else {
+          rawCode = `// ${filePath}\n// Loading source code from repository...`;
+        }
+      }
+
+      const fileFindings = getFileFindings(filePath, fileName);
+      const rawLines = rawCode.split("\n");
+
+      const lines = rawLines.map((line, idx) => {
+        const lineNum = idx + 1;
+        const findingOnLine = fileFindings.find((f) => f.line === lineNum);
+        return {
+          line: lineNum,
+          code: line,
+          highlight: !!findingOnLine && !findingOnLine.falsePositive,
+          flag: findingOnLine ? (findingOnLine.severity.toUpperCase() as any) : undefined,
+          label: findingOnLine ? `${findingOnLine.swcId} ${findingOnLine.title}` : undefined,
+          findingId: findingOnLine?.id,
+        };
+      });
+
+      const flags = fileFindings.map((f) => ({
         line: f.line || 1,
         type: (f.severity.toUpperCase() as any) || "HIGH",
         label: `${f.swcId} ${f.title}`,
         findingId: f.id,
-      })),
-      lines: primaryLines,
-    };
+      }));
 
-    // Interface
-    const ifacePath = `contracts/interfaces/I${baseName}.sol`;
-    const ifaceName = `I${baseName}.sol`;
-    const ifaceFindings = getFileFindings(ifacePath, ifaceName);
-    const ifaceRaw = `// SPDX-License-Identifier: MIT
-pragma solidity ${auditData?.compilerVersion?.replace('v', '^') || '^0.8.20'};
+      const isPrimary = filePath === primaryPath || fileName === fname;
 
-interface I${baseName} {
-    event Deposit(address indexed user, uint256 amount);
-    event Withdraw(address indexed user, uint256 amount);
-    event EmergencyPause(address indexed caller);
-
-    function deposit() external payable;
-    function withdrawAll() external;
-    function userBalances(address user) external view returns (uint256);
-    function totalLocked() external view returns (uint256);
-}`;
-    const ifaceLines = ifaceRaw.split("\n").map((code, idx) => {
-      const lineNum = idx + 1;
-      const fOnLine = ifaceFindings.find((f) => f.line === lineNum);
       return {
-        line: lineNum,
-        code,
-        highlight: !!fOnLine && !fOnLine.falsePositive,
-        flag: fOnLine ? (fOnLine.severity.toUpperCase() as any) : undefined,
-        label: fOnLine ? `${fOnLine.swcId} ${fOnLine.title}` : undefined,
-        findingId: fOnLine?.id,
+        path: filePath,
+        name: fileName,
+        folder,
+        sloc: isPrimary ? (auditData?.sloc || rawLines.length) : rawLines.length,
+        hasFixDiff: fileFindings.length > 0 || isPrimary,
+        additions: isPrimary ? 4 : (fileFindings.length > 0 ? 2 : 0),
+        deletions: isPrimary ? 1 : 0,
+        diffLines: lines.map((l) => ({
+          type: "context" as const,
+          oldLine: l.line,
+          newLine: l.line,
+          code: l.code,
+        })),
+        flags,
+        lines,
       };
     });
-    const ifaceFile: ProjectFile = {
-      path: ifacePath,
-      name: ifaceName,
-      folder: "interfaces",
-      sloc: ifaceLines.length,
-      hasFixDiff: false,
-      additions: 0,
-      deletions: 0,
-      diffLines: ifaceLines.map((l) => ({ type: "context" as const, oldLine: l.line, newLine: l.line, code: l.code })),
-      flags: ifaceFindings.map((f) => ({ line: f.line || 1, type: (f.severity.toUpperCase() as any) || "LOW", label: f.title, findingId: f.id })),
-      lines: ifaceLines,
-    };
 
-    // Library
-    const libPath = `contracts/libraries/TransferHelper.sol`;
-    const libName = `TransferHelper.sol`;
-    const libFindings = getFileFindings(libPath, libName);
-    const libRaw = `// SPDX-License-Identifier: MIT
-pragma solidity ${auditData?.compilerVersion?.replace('v', '^') || '^0.8.20'};
-
-library TransferHelper {
-    function safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, "ETH_TRANSFER_FAILED");
-    }
-
-    function safeTransfer(address token, address to, uint256 value) internal {
-        (bool success, bytes memory data) = token.call(
-            abi.encodeWithSelector(0xa9059cbb, to, value)
-        );
-        require(success && (data.length == 0 || abi.decode(data, (bool))), "SAFE_TRANSFER_FAILED");
-    }
-}`;
-    const libLines = libRaw.split("\n").map((code, idx) => {
-      const lineNum = idx + 1;
-      const fOnLine = libFindings.find((f) => f.line === lineNum);
-      return {
-        line: lineNum,
-        code,
-        highlight: !!fOnLine && !fOnLine.falsePositive,
-        flag: fOnLine ? (fOnLine.severity.toUpperCase() as any) : undefined,
-        label: fOnLine ? `${fOnLine.swcId} ${fOnLine.title}` : undefined,
-        findingId: fOnLine?.id,
-      };
+    return generatedFiles.sort((a, b) => {
+      const aIsPrimary = a.path === primaryPath || a.name === fname;
+      const bIsPrimary = b.path === primaryPath || b.name === fname;
+      if (aIsPrimary && !bIsPrimary) return -1;
+      if (!aIsPrimary && bIsPrimary) return 1;
+      if (a.folder !== b.folder) return a.folder.localeCompare(b.folder);
+      return a.name.localeCompare(b.name);
     });
-    const libFile: ProjectFile = {
-      path: libPath,
-      name: libName,
-      folder: "libraries",
-      sloc: libLines.length,
-      hasFixDiff: true,
-      additions: 2,
-      deletions: 0,
-      diffLines: libLines.map((l) => ({ type: "context" as const, oldLine: l.line, newLine: l.line, code: l.code })),
-      flags: libFindings.map((f) => ({ line: f.line || 1, type: (f.severity.toUpperCase() as any) || "HIGH", label: f.title, findingId: f.id })),
-      lines: libLines,
-    };
+  }, [auditData, fetchedSourceCode, findings, primaryPath, fname, baseName, repoFileList, repoFilesMap]);
 
-    return [primaryFile, ifaceFile, libFile];
-  }, [auditData, fetchedSourceCode, findings, primaryPath, fname, baseName]);
-
-  const activeFile =
+  const activeFile: ProjectFile =
     projectFiles.find(
       (f) =>
         f.path === selectedFilePath ||
         f.name === selectedFilePath ||
         selectedFilePath.endsWith(f.name) ||
         f.path.endsWith(selectedFilePath)
-    ) || projectFiles[0];
+    ) ||
+    projectFiles[0] || {
+      path: primaryPath,
+      name: fname,
+      folder: "contracts",
+      sloc: 0,
+      hasFixDiff: false,
+      additions: 0,
+      deletions: 0,
+      diffLines: [],
+      flags: [],
+      lines: [],
+    };
 
   // Group files by folder for File Tree Explorer
   const fileTree = React.useMemo(() => {
@@ -1436,7 +1460,10 @@ mitigated or verified false positives before production deployment.
                               return (
                                 <button
                                   key={file.path}
-                                  onClick={() => setSelectedFilePath(file.path)}
+                                  onClick={() => {
+                                    setSelectedFilePath(file.path);
+                                    fetchFileContent(file.path);
+                                  }}
                                   className={`w-full flex items-center justify-between px-2 py-1 rounded-[2px] text-left text-xs transition-colors ${
                                     isSelected
                                       ? "bg-accent-scan/15 text-accent-scan font-bold border-l-2 border-accent-scan"
@@ -1691,8 +1718,16 @@ mitigated or verified false positives before production deployment.
                         setSelectedFindingId(f.id);
                         setFindingView("detail");
                         if (f.file && f.file !== activeFile.path) {
-                          const target = projectFiles.find((p) => p.path === f.file || p.name === f.file);
-                          if (target) setSelectedFilePath(target.path);
+                          const target = projectFiles.find(
+                            (p) =>
+                              p.path === f.file ||
+                              p.name === f.file ||
+                              p.path.endsWith("/" + f.file) ||
+                              f.file.endsWith("/" + p.name)
+                          );
+                          const targetPath = target ? target.path : f.file;
+                          setSelectedFilePath(targetPath);
+                          fetchFileContent(targetPath);
                         }
                       }}
                       className="w-full p-2.5 rounded-lg border transition-all text-left bg-white dark:bg-bg-panel border-gray-200/80 dark:border-border-hairline hover:border-accent-scan/50 dark:hover:border-accent-scan/50 hover:shadow-xs group"
