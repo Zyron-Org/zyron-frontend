@@ -167,6 +167,7 @@ export default function AuditStatusTrackerPage() {
               synthesizedPoC: f.synthesizedPoC || undefined,
               remediationNote: f.remediationNote || undefined,
               foundBy: (f.foundBy || (f.ruleId?.startsWith("ZYRON-AI") ? "AI" : (f.ruleId ? "STATIC" : "MANUAL"))).toUpperCase(),
+              falsePositive: Boolean(f.falsePositive),
               comments: Array.isArray(f.comments)
                 ? f.comments.map((c: any) => ({
                     id: c.id,

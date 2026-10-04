@@ -1378,10 +1378,22 @@ mitigated or verified false positives before production deployment.
             )}
 
             <StatusPill
-              status={ticketStage === "completed" ? "completed" : ticketStage.includes("correction") ? "corrections-requested" : "in-review"}
+              status={
+                ticketStage === "completed"
+                  ? "completed"
+                  : allFindingsResolved
+                  ? "attestation-pending"
+                  : ticketStage.includes("correction")
+                  ? "corrections-requested"
+                  : "in-review"
+              }
               size="sm"
             >
-              {ticketStage.toUpperCase().replace("_", " ")}
+              {ticketStage === "completed"
+                ? "COMPLETED"
+                : allFindingsResolved
+                ? "ATTESTATION PENDING"
+                : ticketStage.toUpperCase().replace("_", " ")}
             </StatusPill>
           </div>
         </div>
