@@ -61,6 +61,7 @@ import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { HighlightedSolidityLine, HighlightedSolidityBlock } from "@/lib/solidity-highlighter";
 import { ethers } from "ethers";
+import { ZYRON_ATTESTATION_ABI, ZYRON_ATTESTATION_BYTECODE } from "@/lib/zyron-contract";
 
 
 interface DiffLine {
@@ -1066,7 +1067,58 @@ contract ${baseName} {
         return;
       }
 
-      // 5. Request EIP-712 Typed Data Signature from auditor's wallet
+      // 5. Connect Provider and prepare gas fee overrides
+      const provider = new ethers.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+
+      // Fetch current fee data and apply buffer for Arbitrum L2 fluctuating baseFee
+      const feeData = await provider.getFeeData();
+      const overrides: any = {
+        gasLimit: BigInt(600000), // Safe gas limit to prevent "intrinsic gas too low" and cover L2 write
+      };
+      if (feeData.maxFeePerGas) {
+        const buffered = (feeData.maxFeePerGas * BigInt(150)) / BigInt(100);
+        const minFloor = ethers.parseUnits("0.1", "gwei");
+        overrides.maxFeePerGas = buffered > minFloor ? buffered : minFloor;
+      } else {
+        overrides.maxFeePerGas = ethers.parseUnits("0.1", "gwei");
+      }
+
+      if (feeData.maxPriorityFeePerGas) {
+        overrides.maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas * BigInt(130)) / BigInt(100);
+      } else {
+        overrides.maxPriorityFeePerGas = ethers.parseUnits("0.01", "gwei");
+      }
+
+      // 6. Verify or Deploy ZyronAttestation contract on Arbitrum Sepolia
+      let activeContractAddress =
+        payloadData.verifyingContract || "0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918";
+
+      try {
+        const code = await provider.getCode(activeContractAddress);
+        if (!code || code === "0x" || code === "0x0") {
+          toast.info("ZyronAttestation registry is not yet deployed on Arbitrum Sepolia. Initializing contract deployment from your wallet (one-time setup)...");
+          const factory = new ethers.ContractFactory(ZYRON_ATTESTATION_ABI, ZYRON_ATTESTATION_BYTECODE, signer);
+          const deployTx = await factory.deploy(signerAddress, overrides);
+          toast.info(`Deploying contract ${deployTx.target || (deployTx as any).address}... Confirm in your wallet.`);
+          await deployTx.waitForDeployment();
+          activeContractAddress = await deployTx.getAddress();
+          toast.success(`ZyronAttestation deployed on Arbitrum Sepolia at ${activeContractAddress}!`);
+
+          // Update EIP-712 domain verifyingContract to match newly deployed registry
+          payloadData.payload.domain.verifyingContract = activeContractAddress;
+          payloadData.verifyingContract = activeContractAddress;
+        }
+      } catch (deployErr: any) {
+        console.warn("Contract deployment check/attempt error:", deployErr);
+        if (deployErr.code === 4001 || deployErr.message?.includes("rejected")) {
+          toast.error("Contract deployment rejected in wallet. Attestation aborted.");
+          setIsCompilingReport(false);
+          return;
+        }
+      }
+
+      // 7. Request EIP-712 Typed Data Signature from auditor's wallet
       toast.info("Please sign the EIP-712 attestation payload in your wallet...");
       let signature = "";
       try {
@@ -1074,47 +1126,19 @@ contract ${baseName} {
           method: "eth_signTypedData_v4",
           params: [signerAddress, JSON.stringify(payloadData.payload)],
         });
-        toast.success("EIP-712 signature secured! Now submitting transaction to Arbitrum Sepolia...");
+        toast.success("EIP-712 signature secured! Now broadcasting transaction to Arbitrum Sepolia...");
       } catch (signErr: any) {
         toast.error(`EIP-712 signature rejected or failed: ${signErr.message || "user cancelled"}`);
         setIsCompilingReport(false);
         return;
       }
 
-      // 6. Direct On-Chain Transaction Broadcast to ZyronAttestation.sol
-      const ZYRON_ATTESTATION_ABI = [
-        "function publishAttestationWithSignature(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, address leadAuditor, address peerAuditor, uint256 sloc, string calldata contractFileName, uint8 status, uint256 timestamp, bytes calldata signature) external",
-        "function verifyAttestation(bytes32 auditId) external view returns (tuple(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, bytes32 reportHash, address leadAuditor, address peerAuditor, uint256 sloc, uint256 timestamp, string contractFileName, uint8 status, bool isVerified))",
-      ];
-
-      const contractAddress =
-        payloadData.verifyingContract || "0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918";
-
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
-      const contract = new ethers.Contract(contractAddress, ZYRON_ATTESTATION_ABI, signer);
-
+      // 8. Direct On-Chain Transaction Broadcast to ZyronAttestation.sol
+      const contract = new ethers.Contract(activeContractAddress, ZYRON_ATTESTATION_ABI, signer);
       let txHash = "";
       try {
         toast.info("Confirm the attestation transaction in your wallet to broadcast to Arbitrum Sepolia...");
         const msg = payloadData.payload.message;
-
-        // Fetch current fee data and apply buffer for Arbitrum L2 fluctuating baseFee
-        const feeData = await provider.getFeeData();
-        const overrides: any = {};
-        if (feeData.maxFeePerGas) {
-          const buffered = (feeData.maxFeePerGas * 150n) / 100n;
-          const minFloor = ethers.parseUnits("0.1", "gwei");
-          overrides.maxFeePerGas = buffered > minFloor ? buffered : minFloor;
-        } else {
-          overrides.maxFeePerGas = ethers.parseUnits("0.1", "gwei");
-        }
-
-        if (feeData.maxPriorityFeePerGas) {
-          overrides.maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas * 130n) / 100n;
-        } else {
-          overrides.maxPriorityFeePerGas = ethers.parseUnits("0.01", "gwei");
-        }
 
         const tx = await contract.publishAttestationWithSignature(
           msg.auditId,
@@ -1150,12 +1174,13 @@ contract ${baseName} {
         return;
       }
 
-      // 7. Notify Backend to Seal Audit, Generate PDF Report, and Pin Metadata
+      // 9. Notify Backend to Seal Audit, Generate PDF Report, and Pin Metadata
       toast.info("Registering verified on-chain attestation and compiling final PDF report...");
       const signRes = await apiClient.post(`/audits/${audit.id}/attestation/sign`, {
         signature,
         signerAddress,
         txHash,
+        contractAddress: activeContractAddress,
         payloadMessage: payloadData.payload.message,
         chainId: ARB_SEPOLIA_CHAIN_ID_DEC,
       });
