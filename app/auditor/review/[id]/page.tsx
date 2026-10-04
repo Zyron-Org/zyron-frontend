@@ -1092,7 +1092,7 @@ contract ${baseName} {
 
       // 6. Verify or Deploy ZyronAttestation contract on Arbitrum Sepolia
       let activeContractAddress =
-        payloadData.verifyingContract || "0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918";
+        payloadData.verifyingContract || "0x3331185fAEB2AD65ccDEB7C15025393Ca8F6834D";
 
       try {
         const code = await provider.getCode(activeContractAddress);

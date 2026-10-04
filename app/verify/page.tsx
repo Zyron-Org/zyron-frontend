@@ -1056,10 +1056,10 @@ function VerifyPageContent() {
                           <div className="text-[10px] text-text-muted uppercase">Zyron On-Chain Registry Contract</div>
                           <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
                             <span className="text-[11px] text-text-primary break-all">
-                              0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918
+                              0x3331185fAEB2AD65ccDEB7C15025393Ca8F6834D
                             </span>
                             <a
-                              href="https://sepolia.arbiscan.io/address/0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918#readContract"
+                              href="https://sepolia.arbiscan.io/address/0x3331185fAEB2AD65ccDEB7C15025393Ca8F6834D#readContract"
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-signal-resolved hover:underline text-[10px] flex items-center gap-1 shrink-0 font-bold"
