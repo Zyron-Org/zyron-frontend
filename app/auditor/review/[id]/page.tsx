@@ -1302,17 +1302,48 @@ mitigated or verified false positives before production deployment.
               </Button>
             )}
 
-            {/* Conditional Report Generation Action */}
+            {/* Conditional Actions: Release Findings / Results & Report Generation */}
             {allFindingsResolved ? (
-              <Button
-                variant="primary"
-                size="sm"
-                className="bg-signal-resolved hover:bg-signal-resolved/90 text-bg-void font-bold shadow-sm"
-                leftIcon={<FileCheck2 className="h-4 w-4" />}
-                onClick={() => setShowReportModal(true)}
-              >
-                Generate Final Attestation Report
-              </Button>
+              <div className="flex items-center gap-2">
+                {!isCorrectionsStage ? (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="bg-accent-scan text-bg-void hover:bg-accent-scan/90 font-bold shadow-sm"
+                    leftIcon={<Send className="h-3.5 w-3.5" />}
+                    onClick={async () => {
+                      try {
+                        await apiClient.patch(`/audits/${audit.id}/flag-corrections`);
+                        setTicketStage("corrections-requested");
+                        toast.success(`Findings & verified results released to client! (Attestation Pending)`);
+                      } catch (e: any) {
+                        setTicketStage("corrections-requested");
+                        toast.success(`Findings & verified results released to client! (Attestation Pending)`);
+                      }
+                    }}
+                  >
+                    Release Results to Client
+                  </Button>
+                ) : (
+                  <StatusPill status="attestation-pending" size="sm">
+                    Released to Client · Attestation Pending
+                  </StatusPill>
+                )}
+
+                <Button
+                  variant={isCorrectionsStage ? "primary" : "outline"}
+                  size="sm"
+                  className={
+                    isCorrectionsStage
+                      ? "bg-signal-resolved hover:bg-signal-resolved/90 text-bg-void font-bold shadow-sm"
+                      : "border-signal-resolved text-signal-resolved hover:bg-signal-resolved/10 font-bold"
+                  }
+                  leftIcon={<FileCheck2 className="h-4 w-4" />}
+                  onClick={() => setShowReportModal(true)}
+                >
+                  Generate Final Attestation Report
+                </Button>
+              </div>
             ) : (
               <div className="flex items-center gap-2">
                 {ticketStage.includes("correction") ? (
