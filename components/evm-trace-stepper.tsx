@@ -51,6 +51,7 @@ export interface EvmTraceStepperProps {
   synthesizedPoC?: string;
   onRunProver?: () => void;
   isRunningProver?: boolean;
+  showAgentFlow?: boolean;
 }
 
 export function EvmTraceStepper({
@@ -63,6 +64,7 @@ export function EvmTraceStepper({
   synthesizedPoC,
   onRunProver,
   isRunningProver = false,
+  showAgentFlow = true,
 }: EvmTraceStepperProps) {
   const [activeTab, setActiveTab] = React.useState<"stepper" | "poc">("stepper");
   const [currentStepIndex, setCurrentStepIndex] = React.useState(0);
@@ -238,7 +240,7 @@ export function EvmTraceStepper({
             </button>
           </div>
 
-          {findingId && (
+          {findingId && showAgentFlow && (
             <Button
               variant="outline"
               size="sm"
@@ -622,15 +624,17 @@ export function EvmTraceStepper({
       )}
 
       {/* Autonomous AI Agent Execution Flow Drawer */}
-      <AgentFlowDrawer
-        isOpen={isLogsOpen}
-        onClose={() => setIsLogsOpen(false)}
-        findingId={findingId}
-        findingTitle={title}
-        findingSeverity={findingSeverity}
-        verdict={verdict}
-        fundsDrainedEth={fundsDrainedEth}
-      />
+      {showAgentFlow && (
+        <AgentFlowDrawer
+          isOpen={isLogsOpen}
+          onClose={() => setIsLogsOpen(false)}
+          findingId={findingId}
+          findingTitle={title}
+          findingSeverity={findingSeverity}
+          verdict={verdict}
+          fundsDrainedEth={fundsDrainedEth}
+        />
+      )}
     </div>
   );
 }

@@ -742,6 +742,7 @@ export default function OpenFindingsPage() {
                           fundsDrainedEth={finding.fundsDrainedEth ?? 0}
                           traceSteps={finding.traceSteps}
                           synthesizedPoC={finding.synthesizedPoC}
+                          showAgentFlow={false}
                         />
                       </div>
 
