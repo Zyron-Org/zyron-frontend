@@ -1099,7 +1099,12 @@ contract ${baseName} {
         if (!code || code === "0x" || code === "0x0") {
           toast.info("ZyronAttestation registry is not yet deployed on Arbitrum Sepolia. Initializing contract deployment from your wallet (one-time setup)...");
           const factory = new ethers.ContractFactory(ZYRON_ATTESTATION_ABI, ZYRON_ATTESTATION_BYTECODE, signer);
-          const deployTx = await factory.deploy(signerAddress, overrides);
+          const deployOverrides: any = {
+            gasLimit: BigInt(2000000), // Deployment gas limit (~1.2M actual)
+            maxFeePerGas: overrides.maxFeePerGas,
+            maxPriorityFeePerGas: overrides.maxPriorityFeePerGas,
+          };
+          const deployTx = await factory.deploy(signerAddress, deployOverrides);
           toast.info(`Deploying contract ${deployTx.target || (deployTx as any).address}... Confirm in your wallet.`);
           await deployTx.waitForDeployment();
           activeContractAddress = await deployTx.getAddress();
@@ -1110,12 +1115,10 @@ contract ${baseName} {
           payloadData.verifyingContract = activeContractAddress;
         }
       } catch (deployErr: any) {
-        console.warn("Contract deployment check/attempt error:", deployErr);
-        if (deployErr.code === 4001 || deployErr.message?.includes("rejected")) {
-          toast.error("Contract deployment rejected in wallet. Attestation aborted.");
-          setIsCompilingReport(false);
-          return;
-        }
+        console.error("Contract deployment error:", deployErr);
+        toast.error(`Contract deployment failed: ${deployErr.reason || deployErr.message || "Failed to deploy registry"}`);
+        setIsCompilingReport(false);
+        return;
       }
 
       // 7. Request EIP-712 Typed Data Signature from auditor's wallet
