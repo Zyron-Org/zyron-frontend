@@ -61,6 +61,7 @@ interface VerificationData {
     reportUrl: string;
     onChainTxHash?: string | null;
     onChainChainId?: number | null;
+    attestationSig?: string | null;
   };
   summary: {
     totalFindings: number;
@@ -1006,7 +1007,18 @@ function VerifyPageContent() {
 
                         {audit.cryptography.onChainTxHash && (
                           <div>
-                            <div className="text-[10px] text-text-muted uppercase">On-Chain Attestation Tx</div>
+                            <div className="flex items-center justify-between text-[10px] text-text-muted uppercase">
+                              <span>On-Chain Attestation Tx (Arbitrum Sepolia)</span>
+                              <a
+                                href={`https://sepolia.arbiscan.io/tx/${audit.cryptography.onChainTxHash}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-accent-scan hover:underline flex items-center gap-1 font-bold text-[10px]"
+                              >
+                                <span>Arbiscan</span>
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            </div>
                             <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
                               <span className="text-[11px] text-text-primary break-all">
                                 {audit.cryptography.onChainTxHash}
@@ -1021,6 +1033,42 @@ function VerifyPageContent() {
                             </div>
                           </div>
                         )}
+
+                        {audit.cryptography.attestationSig && (
+                          <div>
+                            <div className="text-[10px] text-text-muted uppercase">EIP-712 Cryptographic Auditor Signature</div>
+                            <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                              <span className="text-[11px] text-accent-scan break-all">
+                                {audit.cryptography.attestationSig}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(audit.cryptography.attestationSig || "", "sig")}
+                                className="text-text-muted hover:text-text-primary shrink-0 cursor-pointer"
+                              >
+                                {copiedKey === "sig" ? <Check className="w-3.5 h-3.5 text-accent-scan" /> : <Copy className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        <div>
+                          <div className="text-[10px] text-text-muted uppercase">Zyron On-Chain Registry Contract</div>
+                          <div className="mt-1 p-2 rounded-[4px] bg-bg-panel border border-border-hairline flex items-center justify-between gap-2">
+                            <span className="text-[11px] text-text-primary break-all">
+                              0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918
+                            </span>
+                            <a
+                              href="https://sepolia.arbiscan.io/address/0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918#readContract"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-signal-resolved hover:underline text-[10px] flex items-center gap-1 shrink-0 font-bold"
+                            >
+                              <span>Contract</span>
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
                       </div>
 
                       {/* IPFS Decentralized Storage */}

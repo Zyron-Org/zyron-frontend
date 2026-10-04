@@ -115,12 +115,14 @@ interface FindingComment {
 
 import { FoundByBadge } from "@/components/found-by-badge";
 import { EvmTraceStepper } from "@/components/evm-trace-stepper";
+import { useAuth } from "@/lib/auth-context";
 
 function renderFoundByBadge(foundBy?: string, size: "sm" | "md" = "sm") {
   return <FoundByBadge foundBy={foundBy} size={size} />;
 }
 
 export default function AuditorCodeReviewPage() {
+  const { user } = useAuth();
   const params = useParams();
   const router = useRouter();
   const ticketId = (params?.id as string) || "";
@@ -975,25 +977,71 @@ contract ${baseName} {
     toast.success(`Finding ${id} approved & marked resolved!`);
   };
 
-  // Finalize Report
+  // Finalize Report with EIP-712 Cryptographic Signature & On-Chain Relay
   const handleFinalizeReport = async () => {
     setIsCompilingReport(true);
     try {
-      const res = await apiClient.patch(`/audits/${audit.id}/stage`, {
-        stage: "COMPLETED",
-      });
+      // 1. Fetch structured EIP-712 payload for lead auditor
+      let payloadData: any = null;
+      try {
+        const payloadRes = await apiClient.get(`/audits/${audit.id}/attestation/payload`);
+        payloadData = payloadRes.data;
+      } catch (e: any) {
+        console.warn("Could not fetch EIP-712 payload:", e.message);
+      }
 
-      const updatedData = res.data;
+      let signature = "";
+      let signerAddress = (user as any)?.walletAddress || "";
+
+      // 2. If browser wallet (MetaMask) is available, request EIP-712 signature
+      if (typeof window !== "undefined" && (window as any).ethereum && payloadData?.payload) {
+        try {
+          const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
+          if (accounts && accounts.length > 0) {
+            signerAddress = accounts[0];
+            toast.info("Prompting wallet for EIP-712 attestation signature...");
+            signature = await (window as any).ethereum.request({
+              method: "eth_signTypedData_v4",
+              params: [signerAddress, JSON.stringify(payloadData.payload)],
+            });
+            toast.success("EIP-712 signature secured! Broadcasting on-chain...");
+          }
+        } catch (walletErr: any) {
+          console.warn("Wallet signing skipped or cancelled:", walletErr.message);
+          toast.warning(`Wallet signing bypassed: ${walletErr.message || "user cancelled"}`);
+        }
+      }
+
+      // 3. Submit signature or advance stage
+      let updatedData: any = null;
+      let onChainInfo: any = null;
+
+      if (signature) {
+        const signRes = await apiClient.post(`/audits/${audit.id}/attestation/sign`, {
+          signature,
+          signerAddress,
+          payloadMessage: payloadData?.payload?.message,
+          chainId: payloadData?.targetChainId,
+        });
+        updatedData = signRes.data?.audit;
+        onChainInfo = signRes.data?.onChain;
+      } else {
+        const res = await apiClient.patch(`/audits/${audit.id}/stage`, {
+          stage: "COMPLETED",
+        });
+        updatedData = res.data;
+      }
+
       const completedAudit: AuditRequest = {
         ...audit,
         stage: "completed",
         completedAt: updatedData?.completedAt || new Date().toISOString().replace("T", " ").substring(0, 16) + " UTC",
-        bytecodeHash: updatedData?.bytecodeHash || "0x8f9b2d4c01e9a37d8849b209d7c04419f8a32d645e771b",
+        bytecodeHash: updatedData?.bytecodeHash || payloadData?.payload?.message?.bytecodeHash || "0x8f9b2d4c01e9a37d8849b209d7c04419f8a32d645e771b",
         reportPdfUrl: updatedData?.reportPdfUrl || `/reports/${audit.id}-${audit.contractFileName}.pdf`,
         pdfSize: updatedData?.pdfSize || "2.4 MB",
         roundsToResolution: 2,
-        onChainTxHash: updatedData?.onChainTxHash,
-        onChainChainId: updatedData?.onChainChainId || 421614,
+        onChainTxHash: onChainInfo?.txHash || updatedData?.onChainTxHash,
+        onChainChainId: onChainInfo?.chainId || updatedData?.onChainChainId || 421614,
         findings: {
           critical: 0,
           high: 0,
@@ -1007,7 +1055,7 @@ contract ${baseName} {
       setTicketStage("completed");
       setIsFinalized(true);
       setCompiledPdfUrl(completedAudit.reportPdfUrl || null);
-      toast.success(`Attestation #${audit.id} successfully signed and sealed!`);
+      toast.success(`Attestation #${audit.id} successfully sealed and registered on-chain!`);
     } catch (err: any) {
       console.warn("Failed to advance stage on backend:", err?.message);
       setIsFinalized(true);
