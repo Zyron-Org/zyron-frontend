@@ -60,6 +60,7 @@ import { MOCK_AUDIT_REQUESTS, OPEN_SOURCE_TEST_PROJECT, type AuditRequest } from
 import { apiClient } from "@/lib/api-client";
 import { toast } from "sonner";
 import { HighlightedSolidityLine, HighlightedSolidityBlock } from "@/lib/solidity-highlighter";
+import { ethers } from "ethers";
 
 
 interface DiffLine {
@@ -977,71 +978,208 @@ contract ${baseName} {
     toast.success(`Finding ${id} approved & marked resolved!`);
   };
 
-  // Finalize Report with EIP-712 Cryptographic Signature & On-Chain Relay
+  // Finalize Report with EIP-712 Cryptographic Signature & Compulsory On-Chain Attestation Broadcast
   const handleFinalizeReport = async () => {
     setIsCompilingReport(true);
     try {
-      // 1. Fetch structured EIP-712 payload for lead auditor
-      let payloadData: any = null;
-      try {
-        const payloadRes = await apiClient.get(`/audits/${audit.id}/attestation/payload`);
-        payloadData = payloadRes.data;
-      } catch (e: any) {
-        console.warn("Could not fetch EIP-712 payload:", e.message);
+      // 1. Compulsory Web3 wallet check — do not allow proceeding without a wallet
+      if (typeof window === "undefined" || !(window as any).ethereum) {
+        toast.error("A Web3 wallet (MetaMask, Rainbow, or compatible) is required to sign and broadcast the attestation to Arbitrum Sepolia.");
+        setIsCompilingReport(false);
+        return;
       }
 
-      let signature = "";
-      let signerAddress = (user as any)?.walletAddress || "";
+      const ethereum = (window as any).ethereum;
 
-      // 2. If browser wallet (MetaMask) is available, request EIP-712 signature
-      if (typeof window !== "undefined" && (window as any).ethereum && payloadData?.payload) {
-        try {
-          const accounts = await (window as any).ethereum.request({ method: "eth_requestAccounts" });
-          if (accounts && accounts.length > 0) {
-            signerAddress = accounts[0];
-            toast.info("Prompting wallet for EIP-712 attestation signature...");
-            signature = await (window as any).ethereum.request({
-              method: "eth_signTypedData_v4",
-              params: [signerAddress, JSON.stringify(payloadData.payload)],
+      // 2. Ensure network is Arbitrum Sepolia (Chain ID: 421614 / 0x66eee)
+      const ARB_SEPOLIA_CHAIN_ID_HEX = "0x66eee";
+      const ARB_SEPOLIA_CHAIN_ID_DEC = 421614;
+
+      try {
+        await ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: ARB_SEPOLIA_CHAIN_ID_HEX }],
+        });
+      } catch (switchErr: any) {
+        // Code 4902 means the chain has not been added to the wallet
+        if (switchErr.code === 4902) {
+          try {
+            await ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [
+                {
+                  chainId: ARB_SEPOLIA_CHAIN_ID_HEX,
+                  chainName: "Arbitrum Sepolia",
+                  nativeCurrency: { name: "Arbitrum Sepolia Ether", symbol: "ETH", decimals: 18 },
+                  rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
+                  blockExplorerUrls: ["https://sepolia.arbiscan.io"],
+                },
+              ],
             });
-            toast.success("EIP-712 signature secured! Broadcasting on-chain...");
+          } catch (addErr: any) {
+            toast.error(`Failed to add Arbitrum Sepolia network: ${addErr.message}`);
+            setIsCompilingReport(false);
+            return;
           }
-        } catch (walletErr: any) {
-          console.warn("Wallet signing skipped or cancelled:", walletErr.message);
-          toast.warning(`Wallet signing bypassed: ${walletErr.message || "user cancelled"}`);
+        } else if (switchErr.code === 4001) {
+          toast.error("Network switch was rejected in your wallet. Arbitrum Sepolia is required.");
+          setIsCompilingReport(false);
+          return;
+        } else {
+          console.warn("Network switch notice:", switchErr);
         }
       }
 
-      // 3. Submit signature or advance stage
-      let updatedData: any = null;
-      let onChainInfo: any = null;
-
-      if (signature) {
-        const signRes = await apiClient.post(`/audits/${audit.id}/attestation/sign`, {
-          signature,
-          signerAddress,
-          payloadMessage: payloadData?.payload?.message,
-          chainId: payloadData?.targetChainId,
-        });
-        updatedData = signRes.data?.audit;
-        onChainInfo = signRes.data?.onChain;
-      } else {
-        const res = await apiClient.patch(`/audits/${audit.id}/stage`, {
-          stage: "COMPLETED",
-        });
-        updatedData = res.data;
+      // 3. Request account access
+      let signerAddress = "";
+      try {
+        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+        if (!accounts || accounts.length === 0) {
+          toast.error("No account authorized in Web3 wallet.");
+          setIsCompilingReport(false);
+          return;
+        }
+        signerAddress = accounts[0];
+      } catch (accErr: any) {
+        toast.error(`Wallet connection rejected: ${accErr.message || "user cancelled"}`);
+        setIsCompilingReport(false);
+        return;
       }
+
+      // 4. Fetch structured EIP-712 payload customized for this signerAddress
+      let payloadData: any = null;
+      try {
+        toast.info("Fetching cryptographic attestation payload...");
+        const payloadRes = await apiClient.get(
+          `/audits/${audit.id}/attestation/payload?signerAddress=${signerAddress}`
+        );
+        payloadData = payloadRes.data;
+      } catch (payloadErr: any) {
+        toast.error(`Failed to generate attestation payload: ${payloadErr.message}`);
+        setIsCompilingReport(false);
+        return;
+      }
+
+      if (!payloadData || !payloadData.payload) {
+        toast.error("Invalid attestation payload returned from server.");
+        setIsCompilingReport(false);
+        return;
+      }
+
+      // 5. Request EIP-712 Typed Data Signature from auditor's wallet
+      toast.info("Please sign the EIP-712 attestation payload in your wallet...");
+      let signature = "";
+      try {
+        signature = await ethereum.request({
+          method: "eth_signTypedData_v4",
+          params: [signerAddress, JSON.stringify(payloadData.payload)],
+        });
+        toast.success("EIP-712 signature secured! Now submitting transaction to Arbitrum Sepolia...");
+      } catch (signErr: any) {
+        toast.error(`EIP-712 signature rejected or failed: ${signErr.message || "user cancelled"}`);
+        setIsCompilingReport(false);
+        return;
+      }
+
+      // 6. Direct On-Chain Transaction Broadcast to ZyronAttestation.sol
+      const ZYRON_ATTESTATION_ABI = [
+        "function publishAttestationWithSignature(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, address leadAuditor, address peerAuditor, uint256 sloc, string calldata contractFileName, uint8 status, uint256 timestamp, bytes calldata signature) external",
+        "function verifyAttestation(bytes32 auditId) external view returns (tuple(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, bytes32 reportHash, address leadAuditor, address peerAuditor, uint256 sloc, uint256 timestamp, string contractFileName, uint8 status, bool isVerified))",
+      ];
+
+      const contractAddress =
+        payloadData.verifyingContract || "0x7682b6ddc20ce79b1cc4c30647f0384e7f2ab918";
+
+      const provider = new ethers.BrowserProvider(ethereum);
+      const signer = await provider.getSigner();
+      const contract = new ethers.Contract(contractAddress, ZYRON_ATTESTATION_ABI, signer);
+
+      let txHash = "";
+      try {
+        toast.info("Confirm the attestation transaction in your wallet to broadcast to Arbitrum Sepolia...");
+        const msg = payloadData.payload.message;
+
+        // Fetch current fee data and apply buffer for Arbitrum L2 fluctuating baseFee
+        const feeData = await provider.getFeeData();
+        const overrides: any = {};
+        if (feeData.maxFeePerGas) {
+          const buffered = (feeData.maxFeePerGas * 150n) / 100n;
+          const minFloor = ethers.parseUnits("0.1", "gwei");
+          overrides.maxFeePerGas = buffered > minFloor ? buffered : minFloor;
+        } else {
+          overrides.maxFeePerGas = ethers.parseUnits("0.1", "gwei");
+        }
+
+        if (feeData.maxPriorityFeePerGas) {
+          overrides.maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas * 130n) / 100n;
+        } else {
+          overrides.maxPriorityFeePerGas = ethers.parseUnits("0.01", "gwei");
+        }
+
+        const tx = await contract.publishAttestationWithSignature(
+          msg.auditId,
+          msg.merkleRoot,
+          msg.bytecodeHash,
+          msg.sourceHash,
+          msg.leadAuditor,
+          ethers.ZeroAddress,
+          msg.sloc,
+          payloadData.contractFileName || audit.contractFileName || "Contract.sol",
+          msg.status,
+          msg.timestamp,
+          signature,
+          overrides
+        );
+
+        toast.info(`Tx broadcasted: ${tx.hash.slice(0, 10)}... Waiting for Arbiscan confirmation...`);
+        const receipt = await tx.wait(1);
+        txHash = receipt.hash;
+        toast.success(`Attestation confirmed on Arbitrum Sepolia in block #${receipt.blockNumber}!`);
+      } catch (txErr: any) {
+        console.error("On-chain transaction error:", txErr);
+        if (txErr.code === 4001 || txErr.message?.includes("rejected")) {
+          toast.error("Transaction was rejected in your wallet. Attestation was not completed.");
+        } else if (txErr.message?.includes("already exists")) {
+          toast.warning("Attestation already exists on-chain for this audit ID. Recording signature...");
+        } else if (txErr.message?.includes("insufficient funds")) {
+          toast.error("Insufficient Arbitrum Sepolia ETH for gas. Please fund your wallet with testnet ETH from an Arbitrum faucet.");
+        } else {
+          toast.error(`On-chain transaction error: ${txErr.reason || txErr.message || "Failed to broadcast"}`);
+        }
+        setIsCompilingReport(false);
+        return;
+      }
+
+      // 7. Notify Backend to Seal Audit, Generate PDF Report, and Pin Metadata
+      toast.info("Registering verified on-chain attestation and compiling final PDF report...");
+      const signRes = await apiClient.post(`/audits/${audit.id}/attestation/sign`, {
+        signature,
+        signerAddress,
+        txHash,
+        payloadMessage: payloadData.payload.message,
+        chainId: ARB_SEPOLIA_CHAIN_ID_DEC,
+      });
+
+      const updatedData = signRes.data?.audit;
+      const onChainInfo = signRes.data?.onChain;
 
       const completedAudit: AuditRequest = {
         ...audit,
         stage: "completed",
-        completedAt: updatedData?.completedAt || new Date().toISOString().replace("T", " ").substring(0, 16) + " UTC",
-        bytecodeHash: updatedData?.bytecodeHash || payloadData?.payload?.message?.bytecodeHash || "0x8f9b2d4c01e9a37d8849b209d7c04419f8a32d645e771b",
-        reportPdfUrl: updatedData?.reportPdfUrl || `/reports/${audit.id}-${audit.contractFileName}.pdf`,
+        completedAt:
+          updatedData?.completedAt ||
+          new Date().toISOString().replace("T", " ").substring(0, 16) + " UTC",
+        bytecodeHash:
+          updatedData?.bytecodeHash ||
+          payloadData?.payload?.message?.bytecodeHash ||
+          "0x8f9b2d4c01e9a37d8849b209d7c04419f8a32d645e771b",
+        reportPdfUrl:
+          updatedData?.reportPdfUrl ||
+          `/reports/${audit.id}-${audit.contractFileName}.pdf`,
         pdfSize: updatedData?.pdfSize || "2.4 MB",
         roundsToResolution: 2,
-        onChainTxHash: onChainInfo?.txHash || updatedData?.onChainTxHash,
-        onChainChainId: onChainInfo?.chainId || updatedData?.onChainChainId || 421614,
+        onChainTxHash: txHash || onChainInfo?.txHash || updatedData?.onChainTxHash,
+        onChainChainId: onChainInfo?.chainId || updatedData?.onChainChainId || ARB_SEPOLIA_CHAIN_ID_DEC,
         findings: {
           critical: 0,
           high: 0,
@@ -1055,12 +1193,10 @@ contract ${baseName} {
       setTicketStage("completed");
       setIsFinalized(true);
       setCompiledPdfUrl(completedAudit.reportPdfUrl || null);
-      toast.success(`Attestation #${audit.id} successfully sealed and registered on-chain!`);
-    } catch (err: any) {
-      console.warn("Failed to advance stage on backend:", err?.message);
-      setIsFinalized(true);
-      setTicketStage("completed");
-      toast.success(`Attestation #${audit.id} signed.`);
+      toast.success(`Attestation #${audit.id} successfully sealed and registered on Arbitrum Sepolia!`);
+    } catch (globalErr: any) {
+      console.error("Finalization failed:", globalErr);
+      toast.error(`Failed to finalize attestation: ${globalErr.message}`);
     } finally {
       setIsCompilingReport(false);
     }
