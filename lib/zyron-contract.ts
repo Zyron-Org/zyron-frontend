@@ -1,7 +1,7 @@
 // Auto-generated contract ABI and deployment artifact for ZyronAttestation.sol
 export const ZYRON_ATTESTATION_ABI = [
   'constructor(address _operator)',
-  'function publishAttestation(bytes32 auditId, bytes32 reportHash, bytes32 bytecodeHash, bytes32 sourceHash, address leadAuditor, address peerAuditor, uint256 sloc, string calldata contractFileName) external',
+  'function publishAttestation(bytes32 auditId, bytes32 bytecodeHash, bytes32 reportHash, address leadAuditor, address peerAuditor, uint256 sloc, string calldata contractFileName) external',
   'function publishAttestationWithSignature(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, address leadAuditor, address peerAuditor, uint256 sloc, string calldata contractFileName, uint8 status, uint256 timestamp, bytes calldata signature) external',
   'function verifyAttestation(bytes32 auditId) external view returns (tuple(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, bytes32 reportHash, address leadAuditor, address peerAuditor, uint256 sloc, uint256 timestamp, string contractFileName, uint8 status, bool isVerified))',
   'function getAttestationByBytecode(bytes32 bytecodeHash) external view returns (tuple(bytes32 auditId, bytes32 merkleRoot, bytes32 bytecodeHash, bytes32 sourceHash, bytes32 reportHash, address leadAuditor, address peerAuditor, uint256 sloc, uint256 timestamp, string contractFileName, uint8 status, bool isVerified))',

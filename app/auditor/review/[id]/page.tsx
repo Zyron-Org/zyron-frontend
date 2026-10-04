@@ -1143,18 +1143,14 @@ contract ${baseName} {
         toast.info("Confirm the attestation transaction in your wallet to broadcast to Arbitrum Sepolia...");
         const msg = payloadData.payload.message;
 
-        const tx = await contract.publishAttestationWithSignature(
+        const tx = await contract.publishAttestation(
           msg.auditId,
-          msg.merkleRoot,
           msg.bytecodeHash,
-          msg.sourceHash,
+          msg.merkleRoot,
           msg.leadAuditor,
           ethers.ZeroAddress,
           msg.sloc,
           payloadData.contractFileName || audit.contractFileName || "Contract.sol",
-          msg.status,
-          msg.timestamp,
-          signature,
           overrides
         );
 
