@@ -1143,16 +1143,38 @@ contract ${baseName} {
         toast.info("Confirm the attestation transaction in your wallet to broadcast to Arbitrum Sepolia...");
         const msg = payloadData.payload.message;
 
-        const tx = await contract.publishAttestation(
-          msg.auditId,
-          msg.bytecodeHash,
-          msg.merkleRoot,
-          msg.leadAuditor,
-          ethers.ZeroAddress,
-          msg.sloc,
-          payloadData.contractFileName || audit.contractFileName || "Contract.sol",
-          overrides
-        );
+        const attestationInput = {
+          auditId: msg.auditId,
+          protocolName: audit.protocolName || "Protocol",
+          targetContract: payloadData.contractFileName || audit.contractFileName || "Contract.sol",
+          gitCommit: audit.gitCommit || "0000000000000000000000000000000000000000",
+          repoTreeHash: ethers.keccak256(ethers.toUtf8Bytes(audit.gitCommit || audit.contractFileName || "repo")),
+          bytecodeHash: msg.bytecodeHash,
+          merkleRoot: msg.merkleRoot,
+          ipfsReportCid: (audit as any).ipfsCid || "",
+          ipfsMetadataCid: (audit as any).ipfsMetadataCid || "",
+          recipient: (audit as any).submittedBy?.walletAddress || signerAddress,
+          leadAuditor: msg.leadAuditor,
+          peerAuditor: ethers.ZeroAddress,
+          sloc: msg.sloc,
+        };
+
+        let tx: any;
+        try {
+          tx = await contract.publishAttestation(attestationInput, overrides);
+        } catch (callErr: any) {
+          console.warn("Struct publishAttestation call failed, attempting 7-param fallback:", callErr);
+          tx = await contract.publishAttestation(
+            msg.auditId,
+            msg.bytecodeHash,
+            msg.merkleRoot,
+            msg.leadAuditor,
+            ethers.ZeroAddress,
+            msg.sloc,
+            payloadData.contractFileName || audit.contractFileName || "Contract.sol",
+            overrides
+          );
+        }
 
         toast.info(`Tx broadcasted: ${tx.hash.slice(0, 10)}... Waiting for Arbiscan confirmation...`);
         const receipt = await tx.wait(1);
