@@ -452,7 +452,7 @@ export function EvmTraceStepper({
               {/* Quick Step Sequence Preview */}
               <div className="space-y-1.5">
                 <div className="text-[11px] text-text-muted font-sans font-medium uppercase tracking-wider">
-                  Simulation Sequence:
+                  Execution Trace Steps:
                 </div>
                 <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
                   {steps.map((s, i) => (

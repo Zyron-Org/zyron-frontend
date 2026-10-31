@@ -6,8 +6,9 @@ import { ShieldCheck } from "lucide-react";
 
 export function SupportedChainsShowcase() {
   const items = [
-    { type: "chain", name: "ARBITRUM", logo: "Arbitrum" },
+    { type: "chain", name: "MONAD", logo: "Monad" },
     { type: "chain", name: "ETHEREUM", logo: "Ethereum" },
+    { type: "chain", name: "BASE", logo: "Base" },
     { type: "chain", name: "ROBINHOOD", logo: "Robinhood" },
     { type: "tag", name: "SUPPORTED NETWORKS" },
   ];

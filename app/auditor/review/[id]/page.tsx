@@ -62,6 +62,7 @@ import { toast } from "sonner";
 import { HighlightedSolidityLine, HighlightedSolidityBlock } from "@/lib/solidity-highlighter";
 import { ethers } from "ethers";
 import { ZYRON_ATTESTATION_ABI, ZYRON_ATTESTATION_BYTECODE } from "@/lib/zyron-contract";
+import { usePrivy, useWallets } from "@privy-io/react-auth";
 
 
 interface DiffLine {
@@ -125,6 +126,8 @@ function renderFoundByBadge(foundBy?: string, size: "sm" | "md" = "sm") {
 
 export default function AuditorCodeReviewPage() {
   const { user } = useAuth();
+  const { wallets } = useWallets();
+  const { user: privyUser } = usePrivy();
   const params = useParams();
   const router = useRouter();
   const ticketId = (params?.id as string) || "";
@@ -203,6 +206,7 @@ export default function AuditorCodeReviewPage() {
   const [showReportModal, setShowReportModal] = React.useState(false);
   const [isCompilingReport, setIsCompilingReport] = React.useState(false);
   const [compiledPdfUrl, setCompiledPdfUrl] = React.useState<string | null>(null);
+  const [selectedAttestationChainId, setSelectedAttestationChainId] = React.useState<number>(10143);
 
   // Autonomous AI Prover execution state
   const [isRunningProver, setIsRunningProver] = React.useState(false);
@@ -983,76 +987,96 @@ contract ${baseName} {
   const handleFinalizeReport = async () => {
     setIsCompilingReport(true);
     try {
-      // 1. Compulsory Web3 wallet check — do not allow proceeding without a wallet
-      if (typeof window === "undefined" || !(window as any).ethereum) {
-        toast.error("A Web3 wallet (MetaMask, Rainbow, or compatible) is required to sign and broadcast the attestation to Arbitrum Sepolia.");
-        setIsCompilingReport(false);
-        return;
-      }
+      const targetChainIdDec = selectedAttestationChainId || 10143;
+      const targetChainIdHex = targetChainIdDec === 84532 ? "0x14a34" : "0x279f";
+      const targetChainName = targetChainIdDec === 84532 ? "Base Sepolia" : "Monad Testnet";
 
-      const ethereum = (window as any).ethereum;
-
-      // 2. Ensure network is Arbitrum Sepolia (Chain ID: 421614 / 0x66eee)
-      const ARB_SEPOLIA_CHAIN_ID_HEX = "0x66eee";
-      const ARB_SEPOLIA_CHAIN_ID_DEC = 421614;
-
-      try {
-        await ethereum.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: ARB_SEPOLIA_CHAIN_ID_HEX }],
-        });
-      } catch (switchErr: any) {
-        // Code 4902 means the chain has not been added to the wallet
-        if (switchErr.code === 4902) {
-          try {
-            await ethereum.request({
-              method: "wallet_addEthereumChain",
-              params: [
-                {
-                  chainId: ARB_SEPOLIA_CHAIN_ID_HEX,
-                  chainName: "Arbitrum Sepolia",
-                  nativeCurrency: { name: "Arbitrum Sepolia Ether", symbol: "ETH", decimals: 18 },
-                  rpcUrls: ["https://sepolia-rollup.arbitrum.io/rpc"],
-                  blockExplorerUrls: ["https://sepolia.arbiscan.io"],
-                },
-              ],
-            });
-          } catch (addErr: any) {
-            toast.error(`Failed to add Arbitrum Sepolia network: ${addErr.message}`);
-            setIsCompilingReport(false);
-            return;
-          }
-        } else if (switchErr.code === 4001) {
-          toast.error("Network switch was rejected in your wallet. Arbitrum Sepolia is required.");
-          setIsCompilingReport(false);
-          return;
-        } else {
-          console.warn("Network switch notice:", switchErr);
-        }
-      }
-
-      // 3. Request account access
+      // 1. Resolve Ethereum provider from Privy or window.ethereum
+      let ethereum: any = null;
       let signerAddress = "";
-      try {
-        const accounts = await ethereum.request({ method: "eth_requestAccounts" });
-        if (!accounts || accounts.length === 0) {
-          toast.error("No account authorized in Web3 wallet.");
-          setIsCompilingReport(false);
-          return;
+
+      const primaryPrivyWallet = wallets.find((w) => w.walletClientType === "privy") || wallets[0];
+      if (primaryPrivyWallet) {
+        try {
+          ethereum = await primaryPrivyWallet.getEthereumProvider();
+          signerAddress = primaryPrivyWallet.address;
+        } catch (e: any) {
+          console.warn("Could not get provider from Privy wallet:", e);
         }
-        signerAddress = accounts[0];
-      } catch (accErr: any) {
-        toast.error(`Wallet connection rejected: ${accErr.message || "user cancelled"}`);
+      }
+
+      if (!ethereum && typeof window !== "undefined" && (window as any).ethereum) {
+        ethereum = (window as any).ethereum;
+        try {
+          const accounts = await ethereum.request({ method: "eth_requestAccounts" });
+          if (accounts && accounts.length > 0) {
+            signerAddress = accounts[0];
+          }
+        } catch (accErr: any) {
+          console.warn("Could not get accounts from window.ethereum:", accErr);
+        }
+      }
+
+      // If user has a wallet address in their profile/privy, use that
+      if (!signerAddress) {
+        signerAddress = user?.walletAddress || privyUser?.wallet?.address || "";
+      }
+
+      if (!signerAddress) {
+        toast.error("Please connect an authorized Auditor/Admin Web3 wallet before signing.");
         setIsCompilingReport(false);
         return;
       }
 
-      // 4. Fetch structured EIP-712 payload customized for this signerAddress
+      // 2. Ensure network matches selected attestation chain
+      if (primaryPrivyWallet && (primaryPrivyWallet as any).switchChain) {
+        try {
+          await (primaryPrivyWallet as any).switchChain(targetChainIdDec);
+        } catch (swErr: any) {
+          console.warn("Privy switchChain warning:", swErr);
+        }
+      } else if (ethereum?.request) {
+        try {
+          await ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: targetChainIdHex }],
+          });
+        } catch (switchErr: any) {
+          if (switchErr.code === 4902) {
+            try {
+              await ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [
+                  targetChainIdDec === 84532
+                    ? {
+                        chainId: targetChainIdHex,
+                        chainName: "Base Sepolia",
+                        nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+                        rpcUrls: ["https://sepolia.base.org"],
+                        blockExplorerUrls: ["https://sepolia.basescan.org"],
+                      }
+                    : {
+                        chainId: targetChainIdHex,
+                        chainName: "Monad Testnet",
+                        nativeCurrency: { name: "Monad", symbol: "MON", decimals: 18 },
+                        rpcUrls: ["https://testnet-rpc.monad.xyz"],
+                        blockExplorerUrls: ["https://testnet.monadvision.com"],
+                      },
+                ],
+              });
+            } catch (addErr: any) {
+              console.warn("wallet_addEthereumChain notice:", addErr);
+            }
+          }
+        }
+      }
+
+      // 3. Fetch structured EIP-712 payload customized for this signerAddress & chainId
       let payloadData: any = null;
       try {
-        toast.info("Fetching cryptographic attestation payload...");
+        toast.info(`Preparing ${targetChainName} EIP-712 attestation payload...`);
         const payloadRes = await apiClient.get(
-          `/audits/${audit.id}/attestation/payload?signerAddress=${signerAddress}`
+          `/audits/${audit.id}/attestation/payload?signerAddress=${signerAddress}&chainId=${targetChainIdDec}`
         );
         payloadData = payloadRes.data;
       } catch (payloadErr: any) {
@@ -1067,147 +1091,48 @@ contract ${baseName} {
         return;
       }
 
-      // 5. Connect Provider and prepare gas fee overrides
-      const provider = new ethers.BrowserProvider(ethereum);
-      const signer = await provider.getSigner();
-
-      // Fetch current fee data and apply buffer for Arbitrum L2 fluctuating baseFee
-      const feeData = await provider.getFeeData();
-      const overrides: any = {
-        gasLimit: BigInt(600000), // Safe gas limit to prevent "intrinsic gas too low" and cover L2 write
-      };
-      if (feeData.maxFeePerGas) {
-        const buffered = (feeData.maxFeePerGas * BigInt(150)) / BigInt(100);
-        const minFloor = ethers.parseUnits("0.1", "gwei");
-        overrides.maxFeePerGas = buffered > minFloor ? buffered : minFloor;
-      } else {
-        overrides.maxFeePerGas = ethers.parseUnits("0.1", "gwei");
-      }
-
-      if (feeData.maxPriorityFeePerGas) {
-        overrides.maxPriorityFeePerGas = (feeData.maxPriorityFeePerGas * BigInt(130)) / BigInt(100);
-      } else {
-        overrides.maxPriorityFeePerGas = ethers.parseUnits("0.01", "gwei");
-      }
-
-      // 6. Verify or Deploy ZyronAttestation contract on Arbitrum Sepolia
-      let activeContractAddress =
-        payloadData.verifyingContract || "0x3331185fAEB2AD65ccDEB7C15025393Ca8F6834D";
-
-      try {
-        const code = await provider.getCode(activeContractAddress);
-        if (!code || code === "0x" || code === "0x0") {
-          toast.info("ZyronAttestation registry is not yet deployed on Arbitrum Sepolia. Initializing contract deployment from your wallet (one-time setup)...");
-          const factory = new ethers.ContractFactory(ZYRON_ATTESTATION_ABI, ZYRON_ATTESTATION_BYTECODE, signer);
-          const deployOverrides: any = {
-            gasLimit: BigInt(2000000), // Deployment gas limit (~1.2M actual)
-            maxFeePerGas: overrides.maxFeePerGas,
-            maxPriorityFeePerGas: overrides.maxPriorityFeePerGas,
-          };
-          const deployTx = await factory.deploy(signerAddress, deployOverrides);
-          toast.info(`Deploying contract ${deployTx.target || (deployTx as any).address}... Confirm in your wallet.`);
-          await deployTx.waitForDeployment();
-          activeContractAddress = await deployTx.getAddress();
-          toast.success(`ZyronAttestation deployed on Arbitrum Sepolia at ${activeContractAddress}!`);
-
-          // Update EIP-712 domain verifyingContract to match newly deployed registry
-          payloadData.payload.domain.verifyingContract = activeContractAddress;
-          payloadData.verifyingContract = activeContractAddress;
-        }
-      } catch (deployErr: any) {
-        console.error("Contract deployment error:", deployErr);
-        toast.error(`Contract deployment failed: ${deployErr.reason || deployErr.message || "Failed to deploy registry"}`);
-        setIsCompilingReport(false);
-        return;
-      }
-
-      // 7. Request EIP-712 Typed Data Signature from auditor's wallet
-      toast.info("Please sign the EIP-712 attestation payload in your wallet...");
+      // 4. Request EIP-712 Typed Data Signature (fail closed if wallet does not sign)
       let signature = "";
-      try {
-        signature = await ethereum.request({
-          method: "eth_signTypedData_v4",
-          params: [signerAddress, JSON.stringify(payloadData.payload)],
-        });
-        toast.success("EIP-712 signature secured! Now broadcasting transaction to Arbitrum Sepolia...");
-      } catch (signErr: any) {
-        toast.error(`EIP-712 signature rejected or failed: ${signErr.message || "user cancelled"}`);
-        setIsCompilingReport(false);
-        return;
-      }
-
-      // 8. Direct On-Chain Transaction Broadcast to ZyronAttestation.sol
-      const contract = new ethers.Contract(activeContractAddress, ZYRON_ATTESTATION_ABI, signer);
-      let txHash = "";
-      try {
-        toast.info("Confirm the attestation transaction in your wallet to broadcast to Arbitrum Sepolia...");
-        const msg = payloadData.payload.message;
-
-        const attestationInput = {
-          auditId: msg.auditId,
-          protocolName: audit.protocolName || "Protocol",
-          targetContract: payloadData.contractFileName || audit.contractFileName || "Contract.sol",
-          gitCommit: audit.gitCommit || "0000000000000000000000000000000000000000",
-          repoTreeHash: ethers.keccak256(ethers.toUtf8Bytes(audit.gitCommit || audit.contractFileName || "repo")),
-          bytecodeHash: msg.bytecodeHash,
-          merkleRoot: msg.merkleRoot,
-          ipfsReportCid: (audit as any).ipfsCid || "",
-          ipfsMetadataCid: (audit as any).ipfsMetadataCid || "",
-          recipient: (audit as any).submittedBy?.walletAddress || signerAddress,
-          leadAuditor: msg.leadAuditor,
-          peerAuditor: ethers.ZeroAddress,
-          sloc: msg.sloc,
-        };
-
-        let tx: any;
+      if (ethereum?.request) {
         try {
-          tx = await contract.publishAttestation(attestationInput, overrides);
-        } catch (callErr: any) {
-          console.warn("Struct publishAttestation call failed, attempting 7-param fallback:", callErr);
-          tx = await contract.publishAttestation(
-            msg.auditId,
-            msg.bytecodeHash,
-            msg.merkleRoot,
-            msg.leadAuditor,
-            ethers.ZeroAddress,
-            msg.sloc,
-            payloadData.contractFileName || audit.contractFileName || "Contract.sol",
-            overrides
-          );
+          toast.info(`Please sign the ${targetChainName} EIP-712 attestation payload in your wallet...`);
+          signature = await ethereum.request({
+            method: "eth_signTypedData_v4",
+            params: [signerAddress, JSON.stringify(payloadData.payload)],
+          });
+          toast.success("EIP-712 signature secured!");
+        } catch (signErr: any) {
+          if (signErr.code === 4001 || signErr.message?.includes("rejected")) {
+            toast.error("Signature was rejected in your wallet. Attestation was not completed.");
+            setIsCompilingReport(false);
+            return;
+          }
+          console.warn("Wallet signing error:", signErr);
         }
+      }
 
-        toast.info(`Tx broadcasted: ${tx.hash.slice(0, 10)}... Waiting for Arbiscan confirmation...`);
-        const receipt = await tx.wait(1);
-        txHash = receipt.hash;
-        toast.success(`Attestation confirmed on Arbitrum Sepolia in block #${receipt.blockNumber}!`);
-      } catch (txErr: any) {
-        console.error("On-chain transaction error:", txErr);
-        if (txErr.code === 4001 || txErr.message?.includes("rejected")) {
-          toast.error("Transaction was rejected in your wallet. Attestation was not completed.");
-        } else if (txErr.message?.includes("already exists")) {
-          toast.warning("Attestation already exists on-chain for this audit ID. Recording signature...");
-        } else if (txErr.message?.includes("insufficient funds")) {
-          toast.error("Insufficient Arbitrum Sepolia ETH for gas. Please fund your wallet with testnet ETH from an Arbitrum faucet.");
-        } else {
-          toast.error(`On-chain transaction error: ${txErr.reason || txErr.message || "Failed to broadcast"}`);
-        }
+      if (!signature || !signature.startsWith("0x")) {
+        toast.error("An authentic EIP-712 wallet signature is required to authorize on-chain attestation.");
         setIsCompilingReport(false);
         return;
       }
 
-      // 9. Notify Backend to Seal Audit, Generate PDF Report, and Pin Metadata
-      toast.info("Registering verified on-chain attestation and compiling final PDF report...");
+      // 5. Broadcast to selected chain via Zyron Relayer
+      const activeContractAddress =
+        payloadData.verifyingContract || "0xBd24D2BFFbc69a17aCe69aaF930fC4e0d979c4D3";
+
+      toast.info(`Broadcasting verified attestation to ${targetChainName} via Zyron Relayer...`);
       const signRes = await apiClient.post(`/audits/${audit.id}/attestation/sign`, {
         signature,
         signerAddress,
-        txHash,
         contractAddress: activeContractAddress,
         payloadMessage: payloadData.payload.message,
-        chainId: ARB_SEPOLIA_CHAIN_ID_DEC,
+        chainId: targetChainIdDec,
       });
 
       const updatedData = signRes.data?.audit;
       const onChainInfo = signRes.data?.onChain;
+      const finalTxHash = onChainInfo?.txHash || updatedData?.onChainTxHash;
 
       const completedAudit: AuditRequest = {
         ...audit,
@@ -1224,8 +1149,8 @@ contract ${baseName} {
           `/reports/${audit.id}-${audit.contractFileName}.pdf`,
         pdfSize: updatedData?.pdfSize || "2.4 MB",
         roundsToResolution: 2,
-        onChainTxHash: txHash || onChainInfo?.txHash || updatedData?.onChainTxHash,
-        onChainChainId: onChainInfo?.chainId || updatedData?.onChainChainId || ARB_SEPOLIA_CHAIN_ID_DEC,
+        onChainTxHash: finalTxHash,
+        onChainChainId: onChainInfo?.chainId || updatedData?.onChainChainId || targetChainIdDec,
         findings: {
           critical: 0,
           high: 0,
@@ -1239,7 +1164,7 @@ contract ${baseName} {
       setTicketStage("completed");
       setIsFinalized(true);
       setCompiledPdfUrl(completedAudit.reportPdfUrl || null);
-      toast.success(`Attestation #${audit.id} successfully sealed and registered on Arbitrum Sepolia!`);
+      toast.success(`Attestation #${audit.id} successfully sealed and registered on ${targetChainName}!`);
     } catch (globalErr: any) {
       console.error("Finalization failed:", globalErr);
       toast.error(`Failed to finalize attestation: ${globalErr.message}`);
@@ -1445,16 +1370,16 @@ mitigated or verified false positives before production deployment.
 
             {audit.onChainTxHash && (
               <div className="p-3 rounded-xl bg-[#F2F4F7] dark:bg-bg-void border border-gray-200/80 dark:border-border-hairline space-y-1 font-mono text-[11px]">
-                <div className="text-text-muted text-[10px]">ON-CHAIN ATTESTATION RECORD (Arbitrum Sepolia):</div>
+                <div className="text-text-muted text-[10px]">ON-CHAIN ATTESTATION RECORD (Monad Testnet):</div>
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-accent-scan select-all text-xs truncate">{audit.onChainTxHash}</span>
                   <a
-                    href={`https://sepolia.arbiscan.io/tx/${audit.onChainTxHash}`}
+                    href={`https://testnet.monadvision.com/tx/${audit.onChainTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-signal-resolved hover:underline text-xs flex items-center gap-1 shrink-0 font-bold"
                   >
-                    <span>Verify On-Chain Explorer</span>
+                    <span>Verify On Monad Explorer</span>
                     <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </div>
@@ -2751,6 +2676,39 @@ mitigated or verified false positives before production deployment.
                 </div>
               </div>
 
+              <div className="p-3.5 rounded-lg bg-white dark:bg-bg-panel border border-gray-200/80 dark:border-border-hairline space-y-2">
+                <div className="flex items-center justify-between text-[10px] text-text-muted">
+                  <span>TARGET BLOCKCHAIN ATTESTATION NETWORK:</span>
+                  <span className="text-accent-scan font-mono font-bold">
+                    {selectedAttestationChainId === 10143 ? "Monad Testnet (10143)" : "Base Sepolia (84532)"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 font-mono text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAttestationChainId(10143)}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-colors ${
+                      selectedAttestationChainId === 10143
+                        ? "bg-accent-scan text-white border-accent-scan"
+                        : "bg-bg-void text-text-muted border-border-hairline hover:text-text-primary"
+                    }`}
+                  >
+                    Monad Testnet (10143)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedAttestationChainId(84532)}
+                    className={`px-3 py-1.5 rounded-lg border text-xs font-bold cursor-pointer transition-colors ${
+                      selectedAttestationChainId === 84532
+                        ? "bg-accent-scan text-white border-accent-scan"
+                        : "bg-bg-void text-text-muted border-border-hairline hover:text-text-primary"
+                    }`}
+                  >
+                    Base Sepolia (84532)
+                  </button>
+                </div>
+              </div>
+
               <div className="p-3.5 rounded-lg bg-white dark:bg-bg-panel border border-gray-200/80 dark:border-border-hairline space-y-1">
                 <div className="flex items-center justify-between text-[10px] text-text-muted">
                   <span>IMMUTABLE BYTECODE SHA-256 HASH:</span>
@@ -2764,7 +2722,7 @@ mitigated or verified false positives before production deployment.
               {audit.onChainTxHash && (
                 <div className="p-3.5 rounded-lg bg-white dark:bg-bg-panel border border-gray-200/80 dark:border-border-hairline space-y-1 font-mono">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-text-muted">ON-CHAIN ATTESTATION TX HASH (Arbitrum Sepolia):</span>
+                    <span className="text-text-muted">ON-CHAIN ATTESTATION TX HASH (Monad Testnet):</span>
                     <span className="text-signal-resolved font-bold flex items-center gap-1">
                       <ShieldCheck className="h-3 w-3" /> VERIFIED ON-CHAIN
                     </span>
@@ -2772,12 +2730,12 @@ mitigated or verified false positives before production deployment.
                   <div className="flex items-center justify-between gap-2 text-xs">
                     <span className="text-accent-scan select-all truncate">{audit.onChainTxHash}</span>
                     <a
-                      href={`https://sepolia.arbiscan.io/tx/${audit.onChainTxHash}`}
+                      href={`https://testnet.monadvision.com/tx/${audit.onChainTxHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-signal-resolved hover:underline text-[10px] flex items-center gap-1 shrink-0 font-bold"
                     >
-                      <span>Explorer</span>
+                      <span>Monad Vision</span>
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>

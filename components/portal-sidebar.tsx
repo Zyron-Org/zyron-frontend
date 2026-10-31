@@ -132,6 +132,18 @@ export function PortalSidebar() {
       ],
     },
     {
+      group: "IDENTITY & TRUST",
+      items: [
+        {
+          href: "/portal/passport",
+          label: "Trust Passport",
+          icon: ShieldCheck,
+          badge: "MONAD",
+          badgeColor: "scan" as const,
+        },
+      ],
+    },
+    {
       group: "DEVELOPER & SYSTEM",
       items: [
         {

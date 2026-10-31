@@ -321,9 +321,7 @@ export default function NewAuditRequestPage() {
   const handleSelectGithubRepo = async (repo: GithubRepoItem) => {
     setSelectedRepo(repo);
     setCustomGithubUrl(repo.htmlUrl || `https://github.com/${repo.fullName}`);
-    if (!protocolName.trim()) {
-      setProtocolName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
-    }
+    setProtocolName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
     const branchToUse = repo.defaultBranch || "main";
     setSelectedBranch(branchToUse);
 
@@ -369,16 +367,14 @@ export default function NewAuditRequestPage() {
       return;
     }
 
-    // Auto-suggest protocol name ONLY if user hasn't typed one yet
-    if (!protocolName.trim()) {
-      const match = url.match(/github\.com\/[^\/]+\/([^\/]+)/);
-      if (match && match[1]) {
-        const repoSlug = match[1].replace(/\.git$/, "");
-        const formatted = repoSlug
-          .replace(/[-_]/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
-        setProtocolName(formatted);
-      }
+    // Synchronize protocol name from repo URL
+    const match = url.match(/github\.com\/[^\/]+\/([^\/]+)/);
+    if (match && match[1]) {
+      const repoSlug = match[1].replace(/\.git$/, "");
+      const formatted = repoSlug
+        .replace(/[-_]/g, " ")
+        .replace(/\b\w/g, (c) => c.toUpperCase());
+      setProtocolName(formatted);
     }
 
     toast.info(`Fetching repository scope for ${url}...`);

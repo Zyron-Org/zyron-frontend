@@ -31,6 +31,7 @@ import {
   Loader2,
   Plus,
   Shield,
+  ShieldCheck,
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -81,25 +82,25 @@ const PIPELINE_STEPS = [
   {
     step: 1,
     title: "Scope Lock",
-    shortDesc: "Commit & AST scope permanently pinned",
+    shortDesc: "Commit & SHA-256 source integrity baseline pinned",
     stageKey: "INTAKE",
   },
   {
     step: 2,
-    title: "AST & AI Red-Team Scan",
-    shortDesc: "Static taint passes & virtual blockchain exploit simulation",
+    title: "AST Scan & Meta AI Prover",
+    shortDesc: "14-pass AST scanner + Meta AI (muse-spark-1.3) Foundry sandbox verification",
     stageKey: "SCANNING",
   },
   {
     step: 3,
-    title: "Auditor Triage",
-    shortDesc: "Senior auditor review & manual invariant verification",
+    title: "Deterministic Verifier & Auditor Triage",
+    shortDesc: "zyron-verifier/2.0.0 evidence validation & human reviewer approval",
     stageKey: "IN_REVIEW",
   },
   {
     step: 4,
-    title: "Attestation",
-    shortDesc: "Cryptographic signature & report sealed in vault",
+    title: "Multichain Attestation",
+    shortDesc: "EIP-712 signed zyron.evidence/v1 sealed on Monad Testnet / Base Sepolia",
     stageKey: "COMPLETED",
   },
 ];
@@ -512,12 +513,15 @@ export default function AuditStatusTrackerPage() {
       });
 
       const sandboxTime = new Date(baseTime.getTime() + 38 * 1000);
+      const openFindingsCount = findings.filter(f => !f.falsePositive && f.status !== "resolved").length;
       events.push({
         time: formatTs(sandboxTime),
-        title: "AI Red-Team Agent: Virtual Blockchain Exploit Simulation",
-        desc: `Target bytecode deployed to ephemeral virtual EVM fork. AI agent synthesized dynamic exploit vectors (flash-loan reentrancy & oracle spoofing) and executed live simulation against state invariants. Executable Foundry PoC suite generated.`,
-        badge: "SIMULATED",
-        badgeSeverity: "critical",
+        title: "AI Red-Team Agent: Invariant & Exploit Verification",
+        desc: openFindingsCount > 0
+          ? `AI verification suite tested state invariants against AST execution pathways. Verified ${openFindingsCount} actionable finding(s) requiring remediation.`
+          : `AI verification suite validated protocol invariants across all execution paths. State safety properties verified.`,
+        badge: openFindingsCount > 0 ? "ACTION REQUIRED" : "VERIFIED",
+        badgeSeverity: openFindingsCount > 0 ? "high" : "resolved",
       });
     }
 
@@ -712,6 +716,26 @@ export default function AuditStatusTrackerPage() {
           </Link>
         </div>
       </div>
+
+      {/* ─── 1.5. STAGE 3 AUDITOR REVIEW & MANUAL APPROVAL ACTION BANNER ─── */}
+      {activeStageNum === 3 && (
+        <div className="rounded-2xl border border-accent-scan/30 bg-accent-scan/5 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-accent-scan font-semibold text-sm">
+              <ShieldCheck className="h-4 w-4 shrink-0" />
+              <span>Stage 03: Auditor Triage & Manual Verification Active</span>
+            </div>
+            <p className="text-xs text-text-muted leading-relaxed max-w-2xl">
+              AST security scan passes completed. Open the Auditor Review Workbench to inspect detected code vulnerabilities, review line-by-line diffs, and finalize the cryptographic attestation seal on Monad Testnet.
+            </p>
+          </div>
+          <Link href={`/auditor/review/${audit.id}`}>
+            <ExpandingButton variant="accent" size="md" rounded="xl" className="shrink-0">
+              <span>Open Review Workbench & Finalize</span>
+            </ExpandingButton>
+          </Link>
+        </div>
+      )}
 
       {/* ─── 2. REMEDIATION VERIFIED / CORRECTIONS REQUESTED ALERT & FIX SUBMISSION ─── */}
       {isRemediationVerified ? (

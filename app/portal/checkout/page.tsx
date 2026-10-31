@@ -79,7 +79,7 @@ function CheckoutContent() {
             No Payment or Escrow Required
           </h2>
           <p className="text-xs sm:text-sm text-text-muted leading-relaxed">
-            During our current release phase, Zyron smart contract audits, autonomous AI prover simulations, and on-chain Arbitrum Sepolia cryptographic attestations are completely complimentary.
+            During our current release phase, Zyron smart contract audits, autonomous AI prover simulations, and on-chain Monad Testnet cryptographic attestations are completely complimentary.
           </p>
         </div>
 
@@ -110,7 +110,7 @@ function CheckoutContent() {
               <span>On-Chain Seal</span>
             </div>
             <p className="text-[11px] text-text-muted">
-              EIP-712 cryptographic attestation minted on Arbitrum Sepolia.
+              EIP-712 cryptographic attestation minted on Monad Testnet.
             </p>
           </div>
         </div>

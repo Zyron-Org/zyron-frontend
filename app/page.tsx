@@ -1547,7 +1547,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-signal-resolved shrink-0 mt-0.5" />
-                    <span>On-chain Arbitrum Sepolia attestation certificate</span>
+                    <span>On-chain Monad Testnet attestation certificate & Soulbound Trust Passport badge</span>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <CheckCircle2 className="h-4 w-4 text-signal-resolved shrink-0 mt-0.5" />
@@ -1671,7 +1671,7 @@ export default function LandingPage() {
               {
                 id: 1,
                 q: "Is Zyron really free to use right now?",
-                a: "Yes! During our current launch phase, Zyron smart contract audits, AI prover sandbox replays, and cryptographic on-chain Arbitrum Sepolia attestation certificates are completely free for all builders and protocol teams.",
+                a: "Yes! During our current launch phase, Zyron smart contract audits, AI prover sandbox replays, and cryptographic on-chain Monad Testnet attestation certificates and Trust Passports are completely free for all builders and protocol teams.",
               },
               {
                 id: 2,
